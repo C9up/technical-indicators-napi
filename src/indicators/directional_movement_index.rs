@@ -24,8 +24,8 @@ pub fn directional_movement_index(
     let highs = data.highs;
     let lows = data.lows;
     let closes = data.closes;
-
     let len = highs.len();
+
     if len < period * 2 {
         return Err(napi::Error::from_reason(format!("Not enough data points. Need at least {}", period * 2)));
     }
@@ -45,28 +45,16 @@ pub fn directional_movement_index(
         let prev_low = lows[i - 1];
         let prev_close = closes[i - 1];
 
-        // True Range
         tr[i] = (high - low)
             .max((high - prev_close).abs())
             .max((low - prev_close).abs());
 
-        // Directional Movement
         let up_move = high - prev_high;
         let down_move = prev_low - low;
 
-        plus_dm[i] = if up_move > down_move && up_move > 0.0 {
-            up_move
-        } else {
-            0.0
-        };
-
-        minus_dm[i] = if down_move > up_move && down_move > 0.0 {
-            down_move
-        } else {
-            0.0
-        };
+        plus_dm[i] = if up_move > down_move && up_move > 0.0 { up_move } else { 0.0 };
+        minus_dm[i] = if down_move > up_move && down_move > 0.0 { down_move } else { 0.0 };
     }
-
 
     let mut tr_sum: f64 = tr[1..=period].iter().sum();
     let mut plus_dm_sum: f64 = plus_dm[1..=period].iter().sum();
@@ -76,9 +64,9 @@ pub fn directional_movement_index(
     minus_di[period] = (minus_dm_sum / tr_sum) * 100.0;
 
     for i in (period + 1)..len {
-        tr_sum = tr_sum - tr_sum / period as f64 + tr[i];
-        plus_dm_sum = plus_dm_sum - plus_dm_sum / period as f64 + plus_dm[i];
-        minus_dm_sum = minus_dm_sum - minus_dm_sum / period as f64 + minus_dm[i];
+        tr_sum = tr_sum - (tr_sum / period as f64) + tr[i];
+        plus_dm_sum = plus_dm_sum - (plus_dm_sum / period as f64) + plus_dm[i];
+        minus_dm_sum = minus_dm_sum - (minus_dm_sum / period as f64) + minus_dm[i];
 
         plus_di[i] = (plus_dm_sum / tr_sum) * 100.0;
         minus_di[i] = (minus_dm_sum / tr_sum) * 100.0;
@@ -91,12 +79,11 @@ pub fn directional_movement_index(
     }
 
     let adx_start = period * 2;
-    let mut adx_sum: f64 = dx[period..adx_start].iter().sum();
-    adx[adx_start - 1] = adx_sum / period as f64;
+    let initial_dx_sum: f64 = dx[period..adx_start].iter().sum();
+    adx[adx_start - 1] = initial_dx_sum / period as f64;
 
     for i in adx_start..len {
-        adx_sum = adx_sum - adx[i - period] + dx[i];
-        adx[i] = adx_sum / period as f64;
+        adx[i] = (adx[i - 1] * (period - 1) as f64 + dx[i]) / period as f64;
     }
 
     Ok(DMIResult {
