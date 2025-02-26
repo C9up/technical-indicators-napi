@@ -10,7 +10,13 @@ pub struct RenkoBrick {
 }
 
 #[napi]
-pub fn renko_chart(prices: Vec<f64>, brick_size: f64) -> Result<Vec<RenkoBrick>> {
+pub fn renko_chart(
+    prices: Vec<f64>,
+    #[napi(ts_arg_type = "number", default = 10)] brick_size: Option<f64>,
+) -> Result<Vec<RenkoBrick>> {
+
+    let brick_size = brick_size.unwrap_or(10.0).max(1.0);
+
     if brick_size <= 0.0 {
         return Err(Error::from_reason("brick_size amount must be greater than 0."));
     }

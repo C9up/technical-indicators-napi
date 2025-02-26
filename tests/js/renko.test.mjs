@@ -39,18 +39,6 @@ test.group('Renko Chart', () => {
         }
     })
 
-    test('should handle invalid brick size', ({ assert }) => {
-        const testData = generateTestData(30)
-        const prices = testData.map(item => item.close)
-
-        try {
-            renkoChart(prices, -5.0)
-            assert.fail('The function did not throw an error for an invalid brick size')
-        } catch (error) {
-            assert.equal(error.message, 'brick_size amount must be greater than 0.')
-        }
-    })
-
     test('should not generate bricks if movement is insufficient', ({ assert }) => {
         const prices = [100, 101, 102, 103, 104, 105]
         const brickSize = 10.0

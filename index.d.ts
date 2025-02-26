@@ -7,7 +7,7 @@ export interface RenkoBrick {
   price: number
   direction: string
 }
-export declare function renkoChart(prices: Array<number>, brickSize: number): Array<RenkoBrick>
+export declare function renkoChart(prices: Array<number>, brickSize?: number): Array<RenkoBrick>
 export interface KagiPoint {
   price: number
   direction: string
