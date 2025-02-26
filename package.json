@@ -6,7 +6,11 @@
   "types": "index.d.ts",
   "napi": {
     "name": "technical-indicators-napi",
-    "triples": {}
+    "triples": {
+      "additional": [
+        "x86_64-unknown-linux-musl"
+      ]
+    }
   },
   "repository": {
     "type": "git",
