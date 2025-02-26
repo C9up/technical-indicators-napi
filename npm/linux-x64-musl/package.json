@@ -5,7 +5,7 @@
     "linux"
   ],
   "cpu": [
-    "arm64"
+    "x64"
   ],
   "main": "technical-indicators-napi.linux-x64-musl.node",
   "files": [

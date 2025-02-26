@@ -1,3 +1,3 @@
-# `technical-indicators-linux-arm64-musl`
+# `technical-indicators-linux-x64-musl`
 
-This is the **aarch64-unknown-linux-musl** binary for `@c9up/technical-indicators-napi`
+This is the **x86_64-unknown-linux-musl** binary for `@c9up/technical-indicators-napi`

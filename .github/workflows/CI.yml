@@ -39,8 +39,9 @@ jobs:
             target: x86_64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
             build: |
-              apk add musl-dev # Installation spécifique à Alpine
+              apk add musl-dev
               rustup target add x86_64-unknown-linux-musl
+              export CARGO_BUILD_TARGET="x86_64-unknown-linux-musl"
               LIBC=musl npm run build --target x86_64-unknown-linux-musl
     name: stable - ${{ matrix.settings.target }} - node@20
     runs-on: ${{ matrix.settings.host }}
