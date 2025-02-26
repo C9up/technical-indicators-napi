@@ -41,7 +41,12 @@ export interface BollingerBandsResult {
   lower: Array<number>
 }
 export declare function bollingerBands(data: Array<number>, period?: number | undefined | null, multiplier?: number | undefined | null): BollingerBandsResult
-export declare function directionalMovementIndex(data: Array<MarketData>, period: number): Array<number>
+export interface DmiResult {
+  plusDi: Array<number>
+  minusDi: Array<number>
+  adx: Array<number>
+}
+export declare function directionalMovementIndex(data: Array<MarketData>, period: number): DmiResult
 export interface Signal {
   type: number
   price: number
