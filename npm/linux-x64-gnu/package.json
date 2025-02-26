@@ -1,5 +1,5 @@
 {
-  "name": "technical-indicators-napi-linux-x64-gnu",
+  "name": "@c9up/technical-indicators-napi-linux-x64-gnu",
   "version": "0.0.1",
   "os": [
     "linux"

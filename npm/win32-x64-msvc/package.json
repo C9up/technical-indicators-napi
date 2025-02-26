@@ -1,5 +1,5 @@
 {
-  "name": "technical-indicators-napi-win32-x64-msvc",
+  "name": "@c9up/technical-indicators-napi-win32-x64-msvc",
   "version": "0.0.1",
   "os": [
     "win32"

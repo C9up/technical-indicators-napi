@@ -1,5 +1,5 @@
 {
-  "name": "technical-indicators-napi-darwin-x64",
+  "name": "@c9up/technical-indicators-napi-darwin-x64",
   "version": "0.0.1",
   "os": [
     "darwin"

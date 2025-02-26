@@ -1,5 +1,5 @@
 {
-  "name": "technical-indicators-napi",
+  "name": "@c9up/technical-indicators-napi",
   "version": "0.0.1",
   "description": "A Rust-based indicator and Charts library compiled to napi.",
   "main": "index.js",
@@ -53,7 +53,10 @@
     "test": "node tests/test.mjs",
     "universal": "napi universal",
     "version": "napi version",
-    "publish:github": "npm version patch && git push --follow-tags"
+    "publish:github:patch": "npm version patch && git push --follow-tags",
+    "publish:github:minor": "npm version minor && git push --follow-tags",
+    "publish:github:major": "npm version major && git push --follow-tags",
+    "publish:github:version": "npm version $npm_config_version && git push --follow-tags"
   },
   "packageManager": "npm@9.8.1"
 }
