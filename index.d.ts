@@ -12,7 +12,7 @@ export interface KagiPoint {
   price: number
   direction: string
 }
-export declare function kagiChart(prices: Array<number>, reversalAmount: number): Array<KagiPoint>
+export declare function kagiChart(prices: Array<number>, reversalAmount?: number): Array<KagiPoint>
 export declare function lowHighOpenCloseVolumeDateToArray(data: Array<MarketData>): MarketDataResult
 export interface BollingerBandsResult {
   middle: Array<number>

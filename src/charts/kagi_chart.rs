@@ -1,4 +1,4 @@
-use napi::{bindgen_prelude::*, Error, Status};
+use napi::{bindgen_prelude::*, Error};
 use napi_derive::napi;
 use serde::Serialize;
 
@@ -10,19 +10,18 @@ struct KagiPoint {
 }
 
 #[napi]
-fn kagi_chart(prices: Vec<f64>, reversal_amount: f64) -> Result<Vec<KagiPoint>> {
+fn kagi_chart(
+    prices: Vec<f64>,
+    #[napi(ts_arg_type = "number", default = 20)] reversal_amount: Option<f64>,
+) -> Result<Vec<KagiPoint>> {
+
+    let reversal_amount = reversal_amount.unwrap_or(20.0).max(1.0);
     if reversal_amount <= 0.0 {
-        return Err(Error::new(
-            Status::InvalidArg,
-            "Reversal amount must be greater than 0.",
-        ));
+        return Err(Error::from_reason("Reversal amount must be greater than 0."));
     }
 
     if prices.is_empty() {
-        return Err(Error::new(
-            Status::InvalidArg,
-            "Prices vector must not be empty.",
-        ));
+        return Err(Error::from_reason("Prices vector must not be empty."));
     }
 
     let mut result_points = Vec::new();

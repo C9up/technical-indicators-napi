@@ -38,16 +38,4 @@ test.group('Kagi Chart', () => {
             assert.equal(error.message, 'Prices vector must not be empty.')
         }
     });
-
-    test('should handle invalid reversal amount', ({ assert }) => {
-        const testData = generateTestData(30);
-        const prices = testData.map(item => item.close);
-
-        try {
-            kagiChart(prices, -1.0);
-            assert.fail()
-        } catch (error) {
-            assert.equal(error.message, 'Reversal amount must be greater than 0.')
-        }
-    });
 });
