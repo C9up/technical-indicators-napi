@@ -1,6 +1,6 @@
 {
   "name": "technical-indicators-napi",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A Rust-based indicator and Charts library compiled to napi.",
   "main": "index.js",
   "types": "index.d.ts",
