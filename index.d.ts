@@ -63,11 +63,11 @@ export interface ImportantLevels {
 }
 export declare function extractImportantLevels(data: Array<number>): ImportantLevels
 export interface IchimokuData {
-  tenkanSen?: number
-  kijunSen?: number
-  senkouSpanA?: number
-  senkouSpanB?: number
-  chikouSpan?: number
+  tenkanSen: number
+  kijunSen: number
+  senkouSpanA: number
+  senkouSpanB: number
+  chikouSpan: number
 }
 export declare function ichimoku(data: Array<MarketData>, tenkanPeriod?: number, kijunPeriod?: number, senkouBPeriod?: number, chikouShift?: number): Array<IchimokuData>
 export declare function parabolicSar(data: Array<MarketData>, start?: number | undefined | null, increment?: number | undefined | null, maxValue?: number | undefined | null): Array<number>

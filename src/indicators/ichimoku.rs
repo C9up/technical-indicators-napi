@@ -1,14 +1,15 @@
 use napi_derive::napi;
 use crate::helpers::MarketData;
+use crate::highest_lowest_helper::calculate_high_low;
 use crate::low_high_open_close_volume_date_to_array_helper::process_market_data;
 
 #[napi(object)]
 pub struct IchimokuData {
-    pub tenkan_sen: Option<f64>,
-    pub kijun_sen: Option<f64>,
-    pub senkou_span_a: Option<f64>,
-    pub senkou_span_b: Option<f64>,
-    pub chikou_span: Option<f64>,
+    pub tenkan_sen: f64,
+    pub kijun_sen: f64,
+    pub senkou_span_a: f64,
+    pub senkou_span_b: f64,
+    pub chikou_span: f64,
 }
 
 #[napi]
@@ -24,97 +25,77 @@ pub fn ichimoku(
     let tenkan_period = tenkan_period.unwrap_or(9).max(1) as usize;
     let kijun_period = kijun_period.unwrap_or(26).max(1) as usize;
     let senkou_b_period = senkou_b_period.unwrap_or(52).max(1) as usize;
-    let chikou_shift = chikou_shift.unwrap_or(26).max(0) as usize;
+    let chikou_shift = chikou_shift.unwrap_or(26).max(1) as usize;
 
     let n = data.highs.len();
     let highs = data.highs;
     let lows = data.lows;
     let closes = data.closes;
 
-    let mut tenkan = vec![None; n];
-    let mut kijun = vec![None; n];
-    let mut senkou_a = vec![None; n];
-    let mut senkou_b = vec![None; n];
-    let mut chikou = vec![None; n];
+    let mut tenkan_sen = vec![f64::NAN; n];
+    let mut kijun_sen = vec![f64::NAN; n];
+    let mut senkou_span_a = vec![f64::NAN; n];
+    let mut senkou_span_b = vec![f64::NAN; n];
+    let mut chikou_span = vec![f64::NAN; n];
 
-    // Conversion des périodes en usize
-    //let tenkan_period = tenkan_period.max(1) as usize;
-    //let kijun_period = kijun_period.max(1) as usize;
-    //let senkou_b_period = senkou_b_period.max(1) as usize;
-    //let chikou_shift = chikou_shift as usize;
-    let senkou_shift = kijun_period;
-
-    // Calcul des composants Tenkan et Kijun
+    // Calcul des composants de base
     for i in 0..n {
         // Tenkan-sen
         if i >= tenkan_period - 1 {
             let start = i - (tenkan_period - 1);
-            let max_high = highs[start..=i].iter().fold(f64::MIN, |a, &b| a.max(b));
-            let min_low = lows[start..=i].iter().fold(f64::MAX, |a, &b| a.min(b));
-            tenkan[i] = Some((max_high + min_low) / 2.0);
+            let (high, low) = calculate_high_low(&highs, &lows, start, i);
+            tenkan_sen[i] = (high + low) / 2.0;
         }
 
         // Kijun-sen
         if i >= kijun_period - 1 {
             let start = i - (kijun_period - 1);
-            let max_high = highs[start..=i].iter().fold(f64::MIN, |a, &b| a.max(b));
-            let min_low = lows[start..=i].iter().fold(f64::MAX, |a, &b| a.min(b));
-            kijun[i] = Some((max_high + min_low) / 2.0);
+            let (high, low) = calculate_high_low(&highs, &lows, start, i);
+            kijun_sen[i] = (high + low) / 2.0;
+        }
+
+        // Chikou Span
+        if i + chikou_shift < n {
+            chikou_span[i] = closes[i + chikou_shift];
         }
     }
 
     // Pré-calcul pour Senkou Span B
-    let mut max_high_senkou_b = vec![None; n];
-    let mut min_low_senkou_b = vec![None; n];
+    let mut senkou_b_buffer = vec![f64::NAN; n];
     for i in 0..n {
         if i >= senkou_b_period - 1 {
             let start = i - (senkou_b_period - 1);
-            let max_h = highs[start..=i].iter().fold(f64::MIN, |a, &b| a.max(b));
-            let min_l = lows[start..=i].iter().fold(f64::MAX, |a, &b| a.min(b));
-            max_high_senkou_b[i] = Some(max_h);
-            min_low_senkou_b[i] = Some(min_l);
+            let (high, low) = calculate_high_low(&highs, &lows, start, i);
+            senkou_b_buffer[i] = (high + low) / 2.0;
         }
     }
 
-    // Calcul des spans et Chikou
-    for j in 0..n {
-        // Senkou Span A (décalage de kijun_period)
-        if j >= senkou_shift {
-            let i = j - senkou_shift;
-            if i >= tenkan_period - 1 && i >= kijun_period - 1 {
-                if let (Some(t), Some(k)) = (tenkan[i], kijun[i]) {
-                    senkou_a[j] = Some((t + k) / 2.0);
-                }
-            }
-        }
+    // Calcul des spans avec décalage
+    let senkou_shift = kijun_period;
+    for i in 0..n {
+        if i >= senkou_shift {
+            let base_idx = i - senkou_shift;
 
-        // Senkou Span B (décalage de kijun_period)
-        if j >= senkou_shift {
-            let i = j - senkou_shift;
-            if i >= senkou_b_period - 1 {
-                if let (Some(max_h), Some(min_l)) = (max_high_senkou_b[i], min_low_senkou_b[i]) {
-                    senkou_b[j] = Some((max_h + min_l) / 2.0);
-                }
+            // Senkou Span A
+            if !tenkan_sen[base_idx].is_nan() && !kijun_sen[base_idx].is_nan() {
+                senkou_span_a[i] = (tenkan_sen[base_idx] + kijun_sen[base_idx]) / 2.0;
             }
-        }
 
-        // Chikou Span
-        if j + chikou_shift < n {
-            chikou[j] = Some(closes[j + chikou_shift]);
+            // Senkou Span B
+            if !senkou_b_buffer[base_idx].is_nan() {
+                senkou_span_b[i] = senkou_b_buffer[base_idx];
+            }
         }
     }
 
     // Construction des résultats
-    let mut result = Vec::with_capacity(n);
-    for i in 0..n {
-        result.push(IchimokuData {
-            tenkan_sen: tenkan[i].or(Some(f64::NAN)),
-            kijun_sen: kijun[i].or(Some(f64::NAN)),
-            senkou_span_a: senkou_a[i].or(Some(f64::NAN)),
-            senkou_span_b: senkou_b[i].or(Some(f64::NAN)),
-            chikou_span: chikou[i].or(Some(f64::NAN)),
-        });
-    }
-
-    result
+    (0..n)
+        .map(|i| IchimokuData {
+            tenkan_sen: tenkan_sen[i],
+            kijun_sen: kijun_sen[i],
+            senkou_span_a: senkou_span_a[i],
+            senkou_span_b: senkou_span_b[i],
+            chikou_span: chikou_span[i],
+        })
+        .collect()
 }

@@ -8,7 +8,6 @@ test.group('Ichimoku Cloud Indicator', () => {
         // Generate 100 days of data to ensure enough points for all calculations
         const testData = generateTestData(100)
         const result = ichimoku(testData)
-
         assert.properties(result[0], [
             'tenkanSen',
             'kijunSen',

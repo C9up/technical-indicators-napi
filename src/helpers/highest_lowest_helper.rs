@@ -1,13 +1,3 @@
-/// Calculate the highest high and lowest low in a given range of data.
-///
-/// # Arguments
-/// * `high_prices` - A slice of high prices.
-/// * `low_prices` - A slice of low prices.
-/// * `start` - The starting index (inclusive).
-/// * `end` - The ending index (inclusive).
-///
-/// # Returns
-/// A tuple `(highest_high, lowest_low)`.
 pub fn calculate_high_low(high_prices: &[f64], low_prices: &[f64], start: usize, end: usize) -> (f64, f64) {
     high_prices[start..=end]
         .iter()
