@@ -1,0 +1,59 @@
+{
+  "name": "technical-indicators-napi",
+  "version": "0.0.0",
+  "description": "A Rust-based indicator and Charts library compiled to napi.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "napi": {
+    "name": "technical-indicators-napi",
+    "triples": {}
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/C9up/technical-indicators-napi.git"
+  },
+  "keywords": [
+    "indicator",
+    "kagi",
+    "renko",
+    "chart",
+    "sma",
+    "dmi",
+    "ichimoku",
+    "ema",
+    "rsi",
+    "smi",
+    "trends meter",
+    "bollinger bands",
+    "wasm",
+    "rust"
+  ],
+  "author": "Kaen25 <kaen25@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/C9up/technical-indicators-napi/issues"
+  },
+  "homepage": "https://github.com/C9up/technical-indicators-napi",
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.4",
+    "@japa/assert": "^4.0.1",
+    "@japa/expect": "^3.0.3",
+    "@japa/file-system": "^2.3.2",
+    "@japa/runner": "^4.2.0",
+    "@japa/snapshot": "^2.0.8"
+  },
+  "engines": {
+    "node": ">= 10"
+  },
+  "scripts": {
+    "artifacts": "napi artifacts",
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform",
+    "prepublishOnly": "napi prepublish -t npm",
+    "test": "node tests/test.mjs",
+    "universal": "napi universal",
+    "version": "napi version",
+    "publish:github": "npm version patch && git push --follow-tags"
+  },
+  "packageManager": "npm@9.8.1"
+}

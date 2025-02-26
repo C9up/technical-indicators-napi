@@ -1,0 +1,44 @@
+{
+  "name": "technical-indicators-napi-linux-x64-gnu",
+  "version": "0.1.0",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "technical-indicators-napi.linux-x64-gnu.node",
+  "files": [
+    "technical-indicators-napi.linux-x64-gnu.node"
+  ],
+  "description": "A Rust-based indicator and Charts library compiled to napi.",
+  "keywords": [
+    "indicator",
+    "kagi",
+    "renko",
+    "chart",
+    "sma",
+    "dmi",
+    "ichimoku",
+    "ema",
+    "rsi",
+    "smi",
+    "trends meter",
+    "bollinger bands",
+    "wasm",
+    "rust"
+  ],
+  "author": "Kaen25 <kaen25@gmail.com>",
+  "homepage": "https://github.com/C9up/technical-indicators-napi",
+  "license": "MIT",
+  "engines": {
+    "node": ">= 10"
+  },
+  "repository": "git+https://github.com/C9up/technical-indicators-napi.git",
+  "bugs": {
+    "url": "https://github.com/C9up/technical-indicators-napi/issues"
+  },
+  "libc": [
+    "glibc"
+  ]
+}
