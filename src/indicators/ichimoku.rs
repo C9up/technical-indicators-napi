@@ -22,9 +22,9 @@ pub fn ichimoku(
 ) -> Vec<IchimokuData> {
 
     let data = process_market_data(data);
-    let tenkan_period = tenkan_period.unwrap_or(9).max(1) as usize;
-    let kijun_period = kijun_period.unwrap_or(26).max(1) as usize;
-    let senkou_b_period = senkou_b_period.unwrap_or(52).max(1) as usize;
+    let tenkan_p = tenkan_period.unwrap_or(9).max(1) as usize;
+    let kijun_p = kijun_period.unwrap_or(26).max(1) as usize;
+    let senkou_b_p = senkou_b_period.unwrap_or(52).max(1) as usize;
     let chikou_shift = chikou_shift.unwrap_or(26).max(1) as usize;
 
     let n = data.highs.len();
@@ -32,70 +32,66 @@ pub fn ichimoku(
     let lows = data.lows;
     let closes = data.closes;
 
-    let mut tenkan_sen = vec![f64::NAN; n];
-    let mut kijun_sen = vec![f64::NAN; n];
-    let mut senkou_span_a = vec![f64::NAN; n];
-    let mut senkou_span_b = vec![f64::NAN; n];
-    let mut chikou_span = vec![f64::NAN; n];
+    // Initialisation des tableaux
+    let mut tenkan = vec![f64::NAN; n];
+    let mut kijun = vec![f64::NAN; n];
+    let mut senkou_a = vec![f64::NAN; n];
+    let mut senkou_b = vec![f64::NAN; n];
+    let mut chikou = vec![f64::NAN; n]; // Chikou corrigé
 
-    // Calcul des composants de base
     for i in 0..n {
-        // Tenkan-sen
-        if i >= tenkan_period - 1 {
-            let start = i - (tenkan_period - 1);
-            let (high, low) = calculate_high_low(&highs, &lows, start, i);
-            tenkan_sen[i] = (high + low) / 2.0;
+        if i >= tenkan_p - 1 {
+            let start = i - (tenkan_p - 1);
+            let (h, l) = calculate_high_low(&highs, &lows, start, i);
+            tenkan[i] = (h + l) / 2.0;
         }
 
-        // Kijun-sen
-        if i >= kijun_period - 1 {
-            let start = i - (kijun_period - 1);
-            let (high, low) = calculate_high_low(&highs, &lows, start, i);
-            kijun_sen[i] = (high + low) / 2.0;
-        }
-
-        // Chikou Span
-        if i + chikou_shift < n {
-            chikou_span[i] = closes[i + chikou_shift];
+        if i >= kijun_p - 1 {
+            let start = i - (kijun_p - 1);
+            let (h, l) = calculate_high_low(&highs, &lows, start, i);
+            kijun[i] = (h + l) / 2.0;
         }
     }
 
-    // Pré-calcul pour Senkou Span B
     let mut senkou_b_buffer = vec![f64::NAN; n];
     for i in 0..n {
-        if i >= senkou_b_period - 1 {
-            let start = i - (senkou_b_period - 1);
-            let (high, low) = calculate_high_low(&highs, &lows, start, i);
-            senkou_b_buffer[i] = (high + low) / 2.0;
+        if i >= senkou_b_p - 1 {
+            let start = i - (senkou_b_p - 1);
+            let (h, l) = calculate_high_low(&highs, &lows, start, i);
+            senkou_b_buffer[i] = (h + l) / 2.0;
         }
     }
 
-    // Calcul des spans avec décalage
-    let senkou_shift = kijun_period;
+    let senkou_shift = kijun_p;
     for i in 0..n {
         if i >= senkou_shift {
             let base_idx = i - senkou_shift;
 
-            // Senkou Span A
-            if !tenkan_sen[base_idx].is_nan() && !kijun_sen[base_idx].is_nan() {
-                senkou_span_a[i] = (tenkan_sen[base_idx] + kijun_sen[base_idx]) / 2.0;
+            // Senkou A
+            if !tenkan[base_idx].is_nan() && !kijun[base_idx].is_nan() {
+                senkou_a[i] = (tenkan[base_idx] + kijun[base_idx]) / 2.0;
             }
 
-            // Senkou Span B
+            // Senkou B
             if !senkou_b_buffer[base_idx].is_nan() {
-                senkou_span_b[i] = senkou_b_buffer[base_idx];
+                senkou_b[i] = senkou_b_buffer[base_idx];
             }
         }
     }
 
-    // Construction des résultats
+    for i in 0..n {
+        if i >= chikou_shift {
+            chikou[i] = closes[i - chikou_shift];
+        }
+    }
+
     (0..n)
         .map(|i| IchimokuData {
-            tenkan_sen: tenkan_sen[i],
-            kijun_sen: kijun_sen[i],
-            senkou_span_a: senkou_span_a[i],
-            senkou_span_b: senkou_span_b[i],
-            chikou_span: chikou_span[i],
+            tenkan_sen: tenkan[i],
+            kijun_sen: kijun[i],
+            senkou_span_a: senkou_a[i],
+            senkou_span_b: senkou_b[i],
+            chikou_span: chikou[i],
         })
         .collect()
 }

@@ -61,17 +61,19 @@ test.group('Ichimoku Cloud Indicator', () => {
     })
 
     test('should calculate correct Chikou Span', ({ assert }) => {
-        const testData = generateTestData(60)
+        const testData = generateTestData(80)
         const result = ichimoku(testData)
 
+        console.log(result)
+
         // Last 26 values should be NaN
-        for (let i = testData.length - 26; i < testData.length; i++) {
-            assert.isTrue(isNaN(result[i].chikouSpan))
+        for (let i = 0; i < 26; i++) {
+            assert.isTrue(Number.isNaN(result[i].chikouSpan));
         }
 
         // Other values should match closing prices shifted backwards
-        for (let i = 0; i < testData.length - 26; i++) {
-            assert.equal(result[i].chikouSpan, testData[i + 26].close)
+        for (let i = 26; i < testData.length; i++) {
+            assert.equal(result[i].chikouSpan, testData[i - 26].close);
         }
     })
 })
