@@ -33,10 +33,10 @@ pub fn directional_movement_index(
     let mut tr = vec![0.0; len];
     let mut plus_dm = vec![0.0; len];
     let mut minus_dm = vec![0.0; len];
-    let mut plus_di = vec![0.0; len];
-    let mut minus_di = vec![0.0; len];
-    let mut dx = vec![0.0; len];
-    let mut adx = vec![0.0; len];
+    let mut plus_di = vec![f64::NAN; len];
+    let mut minus_di = vec![f64::NAN; len];
+    let mut dx = vec![f64::NAN; len];
+    let mut adx = vec![f64::NAN; len];
 
     for i in 1..len {
         let high = highs[i];
@@ -60,30 +60,47 @@ pub fn directional_movement_index(
     let mut plus_dm_sum: f64 = plus_dm[1..=period].iter().sum();
     let mut minus_dm_sum: f64 = minus_dm[1..=period].iter().sum();
 
-    plus_di[period] = (plus_dm_sum / tr_sum) * 100.0;
-    minus_di[period] = (minus_dm_sum / tr_sum) * 100.0;
+    if tr_sum > 0.0 {
+        plus_di[period] = (plus_dm_sum / tr_sum) * 100.0;
+        minus_di[period] = (minus_dm_sum / tr_sum) * 100.0;
+    } else {
+        plus_di[period] = 0.0;
+        minus_di[period] = 0.0;
+    }
 
     for i in (period + 1)..len {
         tr_sum = tr_sum - (tr_sum / period as f64) + tr[i];
         plus_dm_sum = plus_dm_sum - (plus_dm_sum / period as f64) + plus_dm[i];
         minus_dm_sum = minus_dm_sum - (minus_dm_sum / period as f64) + minus_dm[i];
 
-        plus_di[i] = (plus_dm_sum / tr_sum) * 100.0;
-        minus_di[i] = (minus_dm_sum / tr_sum) * 100.0;
+        if tr_sum > 0.0 {
+            plus_di[i] = (plus_dm_sum / tr_sum) * 100.0;
+            minus_di[i] = (minus_dm_sum / tr_sum) * 100.0;
+        } else {
+            plus_di[i] = 0.0;
+            minus_di[i] = 0.0;
+        }
     }
 
     for i in period..len {
-        let di_diff = (plus_di[i] - minus_di[i]).abs();
-        let di_sum = plus_di[i] + minus_di[i];
-        dx[i] = if di_sum > 0.0 { (di_diff / di_sum) * 100.0 } else { 0.0 };
+        if !plus_di[i].is_nan() && !minus_di[i].is_nan() {
+            let di_diff = (plus_di[i] - minus_di[i]).abs();
+            let di_sum = plus_di[i] + minus_di[i];
+            dx[i] = if di_sum > 0.0 { (di_diff / di_sum) * 100.0 } else { 0.0 };
+        }
     }
 
     let adx_start = period * 2;
-    let initial_dx_sum: f64 = dx[period..adx_start].iter().sum();
+    let initial_dx_sum: f64 = dx[period..adx_start]
+        .iter()
+        .filter(|v| !v.is_nan())
+        .sum();
     adx[adx_start - 1] = initial_dx_sum / period as f64;
 
     for i in adx_start..len {
-        adx[i] = (adx[i - 1] * (period - 1) as f64 + dx[i]) / period as f64;
+        if !dx[i].is_nan() {
+            adx[i] = (adx[i - 1] * (period - 1) as f64 + dx[i]) / period as f64;
+        }
     }
 
     Ok(DMIResult {
