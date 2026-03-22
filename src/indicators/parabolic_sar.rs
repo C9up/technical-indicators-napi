@@ -42,7 +42,7 @@ fn update_ep_and_af(is_uptrend: bool, current_ep: f64, current_af: f64, high: f6
 }
 
 #[napi]
-fn parabolic_sar(
+pub fn parabolic_sar(
     data: Vec<crate::MarketData>,
     start: Option<f64>,
     increment: Option<f64>,

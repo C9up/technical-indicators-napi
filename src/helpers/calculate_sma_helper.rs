@@ -23,8 +23,8 @@ pub fn calculate_sma(data: &[f64], period: i32) -> Result<Vec<f64>, Error> {
     let mut sum = 0.0;
 
     // Calcul de la première moyenne
-    for i in 0..period_usize {
-        sum += data[i];
+    for val in &data[..period_usize] {
+        sum += val;
     }
     sma.push(sum / period as f64);
 

@@ -32,6 +32,7 @@ pub fn trends_meter(
 
     // Calcul du True Range
     let mut tr = vec![0.0; closes.len()];
+    #[allow(clippy::needless_range_loop)]
     for i in 1..closes.len() {
         tr[i] = true_range(&highs, &lows, &closes, i);
     }

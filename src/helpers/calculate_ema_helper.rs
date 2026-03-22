@@ -1,6 +1,6 @@
 use napi::Error;
 
-pub fn calculate_ema(data: &Vec<f64>, period: i32) -> Result<Vec<f64>, Error> {
+pub fn calculate_ema(data: &[f64], period: i32) -> Result<Vec<f64>, Error> {
 
     if period <= 0 {
         return Err(Error::from_reason("Period must be greater than 0"));

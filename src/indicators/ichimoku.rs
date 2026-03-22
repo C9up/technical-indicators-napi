@@ -37,7 +37,7 @@ pub fn ichimoku(
     let mut kijun = vec![f64::NAN; n];
     let mut senkou_a = vec![f64::NAN; n];
     let mut senkou_b = vec![f64::NAN; n];
-    let mut chikou = vec![f64::NAN; n]; // Chikou corrigé
+    let mut chikou = vec![f64::NAN; n];
 
     for i in 0..n {
         if i >= tenkan_p - 1 {
@@ -54,6 +54,7 @@ pub fn ichimoku(
     }
 
     let mut senkou_b_buffer = vec![f64::NAN; n];
+    #[allow(clippy::needless_range_loop)]
     for i in 0..n {
         if i >= senkou_b_p - 1 {
             let start = i - (senkou_b_p - 1);
@@ -67,12 +68,10 @@ pub fn ichimoku(
         if i >= senkou_shift {
             let base_idx = i - senkou_shift;
 
-            // Senkou A
             if !tenkan[base_idx].is_nan() && !kijun[base_idx].is_nan() {
                 senkou_a[i] = (tenkan[base_idx] + kijun[base_idx]) / 2.0;
             }
 
-            // Senkou B
             if !senkou_b_buffer[base_idx].is_nan() {
                 senkou_b[i] = senkou_b_buffer[base_idx];
             }

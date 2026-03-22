@@ -24,10 +24,10 @@ pub fn extract_important_levels(data: Vec<f64>) -> ImportantLevels {
         let prev_window = i.saturating_sub(WINDOW);
 
         let is_highest = (prev_window..i).all(|j| data[j] <= current)
-            && (i + 1..=i + WINDOW).all(|j| data.get(j).map_or(true, |v| *v <= current));
+            && (i + 1..=i + WINDOW).all(|j| data.get(j).is_none_or(|v| *v <= current));
 
         let is_lowest = (prev_window..i).all(|j| data[j] >= current)
-            && (i + 1..=i + WINDOW).all(|j| data.get(j).map_or(true, |v| *v >= current));
+            && (i + 1..=i + WINDOW).all(|j| data.get(j).is_none_or(|v| *v >= current));
 
         if is_highest {
             resistances.push(current);
