@@ -1,11 +1,9 @@
-use napi_derive::napi;
 pub mod low_high_open_close_volume_date_to_array_helper;
 pub mod compute_bollinger_bands;
 pub mod calculate_ema_helper;
 pub mod calculate_atr_helper;
 pub mod calculate_sma_helper;
 pub mod entry_exit_signals_helper;
-pub mod relative_strength_index_helper;
 pub mod highest_lowest_helper;
 
 
