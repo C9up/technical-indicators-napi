@@ -15,18 +15,14 @@ pub fn renko_chart(
     #[napi(ts_arg_type = "number", default = 10)] brick_size: Option<f64>,
 ) -> Result<Vec<RenkoBrick>> {
 
-    let brick_size = brick_size.unwrap_or(10.0).max(1.0);
-
-    if brick_size <= 0.0 {
-        return Err(Error::from_reason("brick_size amount must be greater than 0."));
-    }
+    let brick_size = match brick_size {
+        Some(b) if b <= 0.0 => return Err(Error::from_reason("brick_size must be greater than 0.")),
+        Some(b) => b,
+        None => 10.0,
+    };
 
     if prices.is_empty() {
         return Err(Error::from_reason("Prices vector must not be empty."));
-    }
-
-    if brick_size >= prices.len() as f64 {
-        return Err(Error::from_reason("brick_size must be lower than prices length."));
     }
 
     let mut bricks = Vec::new();

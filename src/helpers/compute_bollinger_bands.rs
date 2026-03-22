@@ -54,6 +54,6 @@ pub fn compute_bollinger_bands(prices: &[f64], period: i32, multiplier: f64) -> 
 
 #[inline(always)]
 fn calculate_std(sum: f64, sum_sq: f64, n: f64) -> f64 {
-    let variance = (sum_sq - (sum * sum) / n) / n;
+    let variance = ((sum_sq - (sum * sum) / n) / n).max(0.0);
     variance.sqrt()
 }
