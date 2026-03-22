@@ -32,14 +32,17 @@ pub fn pivot_points(
     let lows = data.lows;
     let closes = data.closes;
 
-    if highs.len() != lows.len() || lows.len() != closes.len() {
-        return Err(napi::Error::from_reason("Inconsistent data lengths between highs, lows and closes"));
+    let len = highs.len();
+    if len < 2 {
+        return Err(napi::Error::from_reason("Need at least 2 data points for pivot points"));
     }
 
-    let mut results = Vec::with_capacity(highs.len() * 5);
+    // Pivot points are computed from the PREVIOUS bar's HLC
+    // and applied to the current bar. First bar has no previous bar.
+    let mut results = Vec::with_capacity((len - 1) * 5);
 
-    for ((high, low), close) in highs.iter().zip(lows).zip(closes) {
-        let levels = PivotLevels::new(*high, low, close); // Correction ici
+    for i in 1..len {
+        let levels = PivotLevels::new(highs[i - 1], lows[i - 1], closes[i - 1]);
         results.extend([
             levels.pivot_point,
             levels.resistance1,
