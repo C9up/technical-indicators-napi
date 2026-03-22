@@ -481,6 +481,138 @@ try {
 }
 ```
 
+## Copulas (Risk Management)
+
+Statistical tools for modelling dependence between assets beyond linear correlation. Used for portfolio risk management and scenario analysis.
+
+### Quantile Transform
+
+```typescript
+quantileTransform(data: Array<number>): Array<number>
+```
+
+Converts data to uniform [0,1] distribution using empirical CDF (rank-based). Required preprocessing step before fitting copulas.
+
+---
+
+### Copula Sampling
+
+```typescript
+gaussianCopulaSample(rho: number, nSamples: number, seed?: number): CopulaSample
+claytonCopulaSample(theta: number, nSamples: number, seed?: number): CopulaSample
+gumbelCopulaSample(theta: number, nSamples: number, seed?: number): CopulaSample
+frankCopulaSample(theta: number, nSamples: number, seed?: number): CopulaSample
+
+interface CopulaSample {
+  u: Array<number>  // first variable [0,1]
+  v: Array<number>  // second variable [0,1]
+}
+```
+
+Generate correlated samples from bivariate copulas. Optional seed for reproducibility.
+
+| Copula | Parameter | Range | Tail Dependence |
+|--------|-----------|-------|-----------------|
+| Gaussian | rho (correlation) | [-1, 1] | None |
+| Clayton | theta | (0, +inf) | Lower tail |
+| Gumbel | theta | [1, +inf) | Upper tail |
+| Frank | theta | (-inf, +inf) \ {0} | None (symmetric) |
+
+```javascript
+import { gaussianCopulaSample, claytonCopulaSample } from '@c9up/technical-indicators-napi'
+
+// Gaussian: correlated samples with rho=0.7
+const gauss = gaussianCopulaSample(0.7, 1000, 42)
+
+// Clayton: strong lower tail dependence
+const clay = claytonCopulaSample(2.0, 1000)
+```
+
+---
+
+### Conditional Sampling
+
+```typescript
+gaussianConditionalSample(
+  u1: number,        // conditioning value in [0,1]
+  rho: number,       // correlation parameter
+  nSamples: number,
+  seed?: number
+): CopulaSample
+```
+
+Sample the second variable given a fixed value for the first. Core building block for scenario analysis.
+
+---
+
+### Copula Fitting
+
+```typescript
+fitCopula(
+  u: Array<number>,
+  v: Array<number>,
+  copulaType: string   // "gaussian" | "clayton" | "gumbel" | "frank"
+): CopulaFitResult
+
+interface CopulaFitResult {
+  copulaType: string
+  parameter: number      // fitted rho or theta
+  logLikelihood: number  // goodness of fit
+}
+```
+
+Fit a copula to uniform-transformed data via maximum likelihood (Gaussian) or Kendall's tau inversion (Archimedean copulas).
+
+```javascript
+import { quantileTransform, fitCopula } from '@c9up/technical-indicators-napi'
+
+const u = quantileTransform(stockAReturns)
+const v = quantileTransform(stockBReturns)
+const fit = fitCopula(u, v, 'gaussian')
+console.log(`Correlation: ${fit.parameter}, LL: ${fit.logLikelihood}`)
+```
+
+---
+
+### Portfolio Scenario Simulation
+
+```typescript
+portfolioScenario(
+  returnsData: Array<Array<number>>,  // [marketReturns, asset1Returns, asset2Returns, ...]
+  marketDrop: number,                  // e.g. -0.05 for 5% drop
+  copulaType?: string,                 // default: "gaussian"
+  nSimulations?: number                // default: 1000
+): Array<ScenarioResult>
+
+interface ScenarioResult {
+  ticker: string
+  meanReturn: number
+  worstCase: number        // 5th percentile
+  bestCase: number         // 95th percentile
+  simulatedReturns: Array<number>
+}
+```
+
+Simulates how portfolio assets would behave given a market shock. Fits a copula between the market and each asset, then uses conditional sampling to generate scenarios.
+
+```javascript
+import { portfolioScenario } from '@c9up/technical-indicators-napi'
+
+// First array = market returns, subsequent = individual assets
+const results = portfolioScenario(
+  [spxReturns, msftReturns, aaplReturns, googlReturns],
+  -0.05,       // 5% market drop
+  'gaussian',
+  5000
+)
+
+results.forEach(r => {
+  console.log(`${r.ticker}: mean=${r.meanReturn}, worst=${r.worstCase}, best=${r.bestCase}`)
+})
+```
+
+---
+
 ## Algorithm References
 
 | Indicator | Reference |
@@ -496,6 +628,10 @@ try {
 | Pivot Points | Standard Floor Pivot Points |
 | Stochastic | George Lane's Stochastic Oscillator |
 | K-Reversal | K-Reversal Momentum Indicator |
+| Gaussian Copula | Multivariate normal dependence structure |
+| Clayton Copula | Archimedean copula (lower tail dependence) |
+| Gumbel Copula | Archimedean copula (upper tail dependence) |
+| Frank Copula | Archimedean copula (symmetric, no tail dependence) |
 
 ## Development
 
