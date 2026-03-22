@@ -49,7 +49,8 @@ pub fn stochastic_momentum_index(
     // Build final result with padding and SMI values
     let mut smi = vec![f64::NAN; lookback - 1];
     for i in 0..ema_diff2.len() {
-        smi.push(100.0 * (ema_diff2[i] / ema_range2[i]));
+        let value = if ema_range2[i] == 0.0 { 0.0 } else { 100.0 * (ema_diff2[i] / ema_range2[i]) };
+        smi.push(value);
     }
 
     Ok(smi)
