@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { relativeStrengthIndex } from '../../index.js'
+import pkg from '../../index.js'
+const { relativeStrengthIndex } = pkg
 
 test.group('RelativeStrengthIndex', (group) => {
 

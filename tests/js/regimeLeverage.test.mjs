@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { regimeLeverage } from '../../index.js'
+import pkg from '../../index.js'
+const { regimeLeverage } = pkg
 import { generateTestData } from './lib.mjs'
 
 /**

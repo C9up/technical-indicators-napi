@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { ichimoku, lowHighOpenCloseVolumeDateToArray } from '../../index.js'
+import pkg from '../../index.js'
+const { ichimoku, lowHighOpenCloseVolumeDateToArray } = pkg
 import { generateTestData } from './lib.mjs'
 
 test.group('Ichimoku Cloud Indicator', () => {

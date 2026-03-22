@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { candlestickPatterns } from '../../index.js'
+import pkg from '../../index.js'
+const { candlestickPatterns } = pkg
 import { generateTestData } from './lib.mjs'
 
 /**

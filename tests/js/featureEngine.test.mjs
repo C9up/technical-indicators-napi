@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { featureEngine } from '../../index.js'
+import pkg from '../../index.js'
+const { featureEngine } = pkg
 import { generateTestData } from './lib.mjs'
 
 /**

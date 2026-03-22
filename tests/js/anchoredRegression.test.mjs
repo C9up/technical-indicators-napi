@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { anchoredRegressionStatic, anchoredRegressionRolling } from '../../index.js'
+import pkg from '../../index.js'
+const { anchoredRegressionStatic, anchoredRegressionRolling } = pkg
 import { generateTestData } from './lib.mjs'
 
 test.group('Anchored Regression', (group) => {

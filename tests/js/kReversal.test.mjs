@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { kReversal } from '../../index.js'
+import pkg from '../../index.js'
+const { kReversal } = pkg
 import { generateTestData } from './lib.mjs'
 
 test.group('KReversal', (group) => {

@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { conditionalProbability, conditionalProbabilityMatrix } from '../../index.js'
+import pkg from '../../index.js'
+const { conditionalProbability, conditionalProbabilityMatrix } = pkg
 import { generateTestData } from './lib.mjs'
 
 test.group('Conditional Probability', (group) => {

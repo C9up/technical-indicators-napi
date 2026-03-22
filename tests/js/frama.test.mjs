@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { frama } from '../../index.js'
+import pkg from '../../index.js'
+const { frama } = pkg
 import { generateTestData } from './lib.mjs'
 
 test.group('FRAMA', (group) => {

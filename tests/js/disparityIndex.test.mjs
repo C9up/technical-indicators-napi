@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { disparityIndex } from '../../index.js'
+import pkg from '../../index.js'
+const { disparityIndex } = pkg
 import { generateTestData } from './lib.mjs'
 
 test.group('Disparity Index', (group) => {

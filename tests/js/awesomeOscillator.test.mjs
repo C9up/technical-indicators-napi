@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { awesomeOscillator } from '../../index.js'
+import pkg from '../../index.js'
+const { awesomeOscillator } = pkg
 import { generateTestData } from './lib.mjs'
 
 test.group('AwesomeOscillator', (group) => {

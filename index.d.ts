@@ -35,24 +35,241 @@ export interface MarketDataResult {
   volumes: Array<number>
   dates: Array<string>
 }
-export interface BollingerBandsResult {
-  upper: Array<number>
-  middle: Array<number>
-  lower: Array<number>
+export interface RegressionSegment {
+  /** Start index in the original data */
+  startIndex: number
+  /** End index in the original data */
+  endIndex: number
+  /** Slope (trend direction and strength) */
+  slope: number
+  /** Intercept */
+  intercept: number
+  /** Residual standard deviation */
+  stdDev: number
+  /** Fitted values for this segment */
+  fitted: Array<number>
+  /** Upper band (fitted + mult * std_dev) */
+  upperBand: Array<number>
+  /** Lower band (fitted - mult * std_dev) */
+  lowerBand: Array<number>
 }
+export interface AnchoredRegressionResult {
+  /** All regression segments */
+  segments: Array<RegressionSegment>
+  /** Full-length fitted line (NaN where no regression) */
+  fitted: Array<number>
+  /** Full-length upper band */
+  upperBand: Array<number>
+  /** Full-length lower band */
+  lowerBand: Array<number>
+  /** Full-length slope values (slope of the segment at each bar) */
+  slopes: Array<number>
+}
+/**
+ * Static Anchored Regression
+ *
+ * Divides the price series into fixed segments based on `anchor_period` bars.
+ * Each segment gets its own independent linear regression.
+ *
+ * Parameters:
+ * - prices: closing prices
+ * - anchor_period: number of bars per segment (e.g. 5 for weekly on daily data)
+ * - band_mult: multiplier for std dev bands (default: 1.0)
+ */
+export declare function anchoredRegressionStatic(prices: Array<number>, anchorPeriod: number, bandMult?: number | undefined | null): AnchoredRegressionResult
+/**
+ * Rolling Anchored Regression
+ *
+ * Regression updates bar-by-bar from each anchor reset point.
+ * The anchor resets every `anchor_period` bars.
+ * At each bar, the regression is computed from the last anchor point to the current bar.
+ *
+ * Parameters:
+ * - prices: closing prices
+ * - anchor_period: bars between anchor resets (e.g. 5 for weekly on daily data)
+ * - band_mult: multiplier for std dev bands (default: 1.0)
+ */
+export declare function anchoredRegressionRolling(prices: Array<number>, anchorPeriod: number, bandMult?: number | undefined | null): AnchoredRegressionResult
+export interface AwesomeOscillatorResult {
+  /** AO values (SMA5 - SMA34 of midpoints) */
+  ao: Array<number>
+  /** AO histogram color: 1 = green (rising), -1 = red (falling), 0 = neutral */
+  histogram: Array<number>
+}
+/**
+ * Awesome Oscillator (Bill Williams)
+ *
+ * AO = SMA(5, Midpoint) - SMA(34, Midpoint)
+ * where Midpoint = (High + Low) / 2
+ *
+ * Measures market momentum. Histogram bars are green when AO is rising,
+ * red when falling. Zero-line crossovers signal trend changes.
+ *
+ * Parameters:
+ * - data: OHLCV market data
+ * - fast_period: fast SMA period (default: 5)
+ * - slow_period: slow SMA period (default: 34)
+ */
+export declare function awesomeOscillator(data: Array<MarketData>, fastPeriod?: number | undefined | null, slowPeriod?: number | undefined | null): AwesomeOscillatorResult
 export declare function bollingerBands(data: Array<number>, period?: number | undefined | null, multiplier?: number | undefined | null): BollingerBandsResult
+export interface CandlestickPatterns {
+  /** Doji: +1 detected, 0 none */
+  doji: Array<number>
+  /** Bullish Engulfing: +1, Bearish Engulfing: -1 */
+  engulfing: Array<number>
+  /** Hammer: +1 (bullish reversal signal) */
+  hammer: Array<number>
+  /** Hanging Man: -1 (bearish reversal signal) */
+  hangingMan: Array<number>
+  /** Bullish Harami: +1, Bearish Harami: -1 */
+  harami: Array<number>
+  /** Morning Star: +1 (bullish three-bar reversal) */
+  morningStar: Array<number>
+  /** Evening Star: -1 (bearish three-bar reversal) */
+  eveningStar: Array<number>
+  /** Three White Soldiers: +1 (strong bullish) */
+  threeWhiteSoldiers: Array<number>
+  /** Three Black Crows: -1 (strong bearish) */
+  threeBlackCrows: Array<number>
+  /** Shooting Star: -1 (bearish reversal) */
+  shootingStar: Array<number>
+  /** Inverted Hammer: +1 (potential bullish reversal) */
+  invertedHammer: Array<number>
+  /** Spinning Top: +1 (indecision) */
+  spinningTop: Array<number>
+  /** Marubozu: +1 bullish (no shadows), -1 bearish */
+  marubozu: Array<number>
+  /** Composite signal: sum of all pattern signals at each bar */
+  composite: Array<number>
+}
+/**
+ * Detect common candlestick patterns from OHLC data.
+ *
+ * Returns +1 for bullish patterns, -1 for bearish, 0 for none.
+ * All 13 patterns are computed in a single pass for efficiency.
+ *
+ * Parameters:
+ * - data: OHLCV market data
+ * - body_threshold: max body/range ratio for doji (default: 0.05 = 5%)
+ */
+export declare function candlestickPatterns(data: Array<MarketData>, bodyThreshold?: number | undefined | null): CandlestickPatterns
+export interface ChoppinessResult {
+  /** Choppiness Index values (0-100). NaN for warmup period. */
+  chop: Array<number>
+  /**
+   * Signals: 1 = trending (CHOP crosses below low_threshold),
+   * -1 = choppy/ranging (CHOP crosses above high_threshold), 0 = neutral
+   */
+  signals: Array<number>
+}
+/**
+ * Choppiness Index (CI)
+ *
+ * CI = 100 * log10(Sum(TR, N) / (HighestHigh_N - LowestLow_N)) / log10(N)
+ *
+ * Measures whether the market is trending or range-bound:
+ * - Low values (< 38.2) indicate a strong trend
+ * - High values (> 61.8) indicate a choppy/sideways market
+ *
+ * Parameters:
+ * - data: OHLCV market data
+ * - period: lookback period (default: 14)
+ * - low_threshold: below this = trending (default: 38.2)
+ * - high_threshold: above this = choppy (default: 61.8)
+ */
+export declare function choppinessIndex(data: Array<MarketData>, period?: number | undefined | null, lowThreshold?: number | undefined | null, highThreshold?: number | undefined | null): ChoppinessResult
+export interface ConditionalProbabilityResult {
+  /** Probability of a move >= +second_threshold after a first move >= first_threshold */
+  upProbability: number
+  /** Probability of a move <= -second_threshold after a first move >= first_threshold */
+  downProbability: number
+  /** Number of times the first move condition was met */
+  firstMoveCount: number
+  /** Number of times the second move was up after first move */
+  upCount: number
+  /** Number of times the second move was down after first move */
+  downCount: number
+  /** Indices where up moves occurred (in original data) */
+  upIndices: Array<number>
+  /** Indices where down moves occurred (in original data) */
+  downIndices: Array<number>
+  /** All second move percentage changes (when first condition was met) */
+  secondMoveReturns: Array<number>
+}
+/**
+ * Conditional Probability Analysis
+ *
+ * Calculates: P(second_move >= threshold | first_move >= threshold)
+ *
+ * Given a price series, finds all instances where the price moved by at least
+ * `first_threshold` over `first_move_days`, then measures what happened over
+ * the following `second_move_days`.
+ *
+ * The first move is triggered by absolute change >= first_threshold (both up and down).
+ * The second move probabilities are split into up (>= second_threshold) and down (<= -second_threshold).
+ */
+export declare function conditionalProbability(prices: Array<number>, firstMoveDays: number, secondMoveDays: number, firstThreshold: number, secondThreshold: number): ConditionalProbabilityResult
+export interface ConditionalMatrixEntry {
+  firstThreshold: number
+  secondThreshold: number
+  upProbability: number
+  downProbability: number
+  sampleCount: number
+}
+/**
+ * Compute a matrix of conditional probabilities across multiple threshold combinations.
+ *
+ * Useful for heatmap visualization: for each (first_threshold, second_threshold) pair,
+ * returns the up and down probabilities.
+ */
+export declare function conditionalProbabilityMatrix(prices: Array<number>, firstMoveDays: number, secondMoveDays: number, firstThresholds: Array<number>, secondThresholds: Array<number>): Array<ConditionalMatrixEntry>
+export interface CopulaSample {
+  u: Array<number>
+  v: Array<number>
+}
+export interface CopulaFitResult {
+  copulaType: string
+  parameter: number
+  logLikelihood: number
+}
+export interface ScenarioResult {
+  ticker: string
+  meanReturn: number
+  worstCase: number
+  bestCase: number
+  simulatedReturns: Array<number>
+}
+export declare function quantileTransform(data: Array<number>): Array<number>
+export declare function gaussianCopulaSample(rho: number, nSamples: number, seed?: number | undefined | null): CopulaSample
+export declare function gaussianConditionalSample(u1: number, rho: number, nSamples: number, seed?: number | undefined | null): CopulaSample
+export declare function claytonCopulaSample(theta: number, nSamples: number, seed?: number | undefined | null): CopulaSample
+export declare function gumbelCopulaSample(theta: number, nSamples: number, seed?: number | undefined | null): CopulaSample
+export declare function frankCopulaSample(theta: number, nSamples: number, seed?: number | undefined | null): CopulaSample
+export declare function fitCopula(u: Array<number>, v: Array<number>, copulaType: string): CopulaFitResult
+export declare function portfolioScenario(returnsData: Array<Array<number>>, marketDrop: number, copulaType?: string | undefined | null, nSimulations?: number | undefined | null): Array<ScenarioResult>
 export interface DmiResult {
   plusDi: Array<number>
   minusDi: Array<number>
   adx: Array<number>
 }
 export declare function directionalMovementIndex(data: Array<MarketData>, period: number): DmiResult
+/**
+ * Disparity Index
+ *
+ * Measures the percentage distance between the current price and a moving average.
+ * DI = 100 * (Close - MA(N)) / MA(N)
+ *
+ * Positive values: price is above the MA (bullish)
+ * Negative values: price is below the MA (bearish)
+ * Extreme values suggest overbought/oversold conditions
+ */
+export declare function disparityIndex(prices: Array<number>, period?: number | undefined | null): Array<number>
 export interface Signal {
   type: number
   price: number
   index: number
 }
-export declare function entryExitSignals(data: Array<number>, smaPeriod: number, emaPeriod: number, atrPeriod: number, threshold: number): Array<Signal>
+export declare function entryExitSignals(data: Array<MarketData>, smaPeriod: number, emaPeriod: number, atrPeriod: number, threshold: number): Array<Signal>
 export declare function exponentialMovingAverage(data: Array<number>, period: number): Array<number>
 export interface ImportantLevels {
   highestResistance: number
@@ -62,6 +279,201 @@ export interface ImportantLevels {
   resistances: Array<number>
 }
 export declare function extractImportantLevels(data: Array<number>): ImportantLevels
+export interface FeatureRow {
+  /** Bar index */
+  index: number
+  /** 1-bar return (pct change) */
+  return1: number
+  /** 5-bar return */
+  return5: number
+  /** 10-bar return */
+  return10: number
+  /** 20-bar return */
+  return20: number
+  /** True Range */
+  trueRange: number
+  /** ATR (Wilder's, 14-period) */
+  atr14: number
+  /** Rolling std dev of 1-bar returns (20-period) */
+  volatility20: number
+  /** High-Low range as % of close */
+  rangePct: number
+  /** RSI (14-period, Wilder's) */
+  rsi14: number
+  /** Rate of Change (10-period) */
+  roc10: number
+  /** Momentum (close - close[10]) */
+  momentum10: number
+  /** SMA 5 */
+  sma5: number
+  /** SMA 20 */
+  sma20: number
+  /** SMA 50 */
+  sma50: number
+  /** EMA 12 */
+  ema12: number
+  /** EMA 26 */
+  ema26: number
+  /** MACD line (EMA12 - EMA26) */
+  macd: number
+  /** MACD signal (EMA9 of MACD) */
+  macdSignal: number
+  /** MACD histogram */
+  macdHistogram: number
+  /** Bollinger %B: (close - lower) / (upper - lower) */
+  bbPctB: number
+  /** Bollinger bandwidth: (upper - lower) / middle */
+  bbBandwidth: number
+  /** Close relative to SMA20: (close - sma20) / sma20 */
+  closeToSma20: number
+  /** Close relative to SMA50 */
+  closeToSma50: number
+  /** Distance from 20-bar high (%) */
+  distFromHigh20: number
+  /** Distance from 20-bar low (%) */
+  distFromLow20: number
+  /** Volume change (pct) */
+  volumeChange: number
+  /** Volume / SMA20 of volume */
+  volumeRatio: number
+  /** Body size: |close - open| / (high - low) */
+  bodyRatio: number
+  /** Upper shadow: (high - max(open,close)) / (high - low) */
+  upperShadow: number
+  /** Lower shadow: (min(open,close) - low) / (high - low) */
+  lowerShadow: number
+  /** Gap: (open - prev_close) / prev_close */
+  gap: number
+  /** SMA5 > SMA20 (1.0 or 0.0) */
+  trendSma520: number
+  /** SMA20 > SMA50 (1.0 or 0.0) */
+  trendSma2050: number
+}
+/**
+ * Generate a complete feature matrix from OHLCV data for ML pipelines.
+ *
+ * Computes ~35 features per bar covering returns, volatility, momentum,
+ * moving averages, MACD, Bollinger Bands, price position, volume,
+ * candle patterns, and trend signals.
+ *
+ * First ~50 bars are skipped (warmup period). Returns one FeatureRow per valid bar.
+ */
+export declare function featureEngine(data: Array<MarketData>): Array<FeatureRow>
+export interface FramaResult {
+  /** FRAMA values (adaptive moving average) */
+  frama: Array<number>
+  /** Fractal dimension at each bar (1.0 = trending, 2.0 = choppy) */
+  fractalDimension: Array<number>
+  /** Alpha (smoothing factor) at each bar */
+  alpha: Array<number>
+  /** FRAMA slope (bar-to-bar change, for trend detection) */
+  slope: Array<number>
+}
+/**
+ * Fractal Adaptive Moving Average (FRAMA) — John Ehlers
+ *
+ * An EMA whose smoothing factor adapts based on the fractal dimension of prices.
+ * In trending markets (fractal dim ~1): FRAMA is fast and responsive.
+ * In choppy markets (fractal dim ~2): FRAMA is slow and smooth.
+ *
+ * Fractal dimension is estimated by comparing the price range over N bars
+ * to the ranges of two N/2 sub-periods (Ehlers' method).
+ *
+ * Parameters:
+ * - data: OHLCV market data
+ * - period: lookback for fractal calculation (default: 20, must be even)
+ * - fast_period: fast EMA equivalent period when trending (default: 4)
+ * - slow_period: slow EMA equivalent period when choppy (default: 200)
+ */
+export declare function frama(data: Array<MarketData>, period?: number | undefined | null, fastPeriod?: number | undefined | null, slowPeriod?: number | undefined | null): FramaResult
+export interface GmmCluster {
+  /** Cluster index */
+  id: number
+  /** Mean of each feature dimension */
+  mean: Array<number>
+  /** Variance of each feature dimension (diagonal covariance) */
+  variance: Array<number>
+  /** Mixing weight (proportion of data in this cluster) */
+  weight: number
+  /** Number of points assigned to this cluster */
+  count: number
+}
+export interface GmmResult {
+  /** Cluster assignment for each data point */
+  labels: Array<number>
+  /**
+   * Posterior probabilities: labels.len() * n_components, row-major
+   * probabilities[i * n_components + k] = P(cluster k | point i)
+   */
+  probabilities: Array<number>
+  /** Cluster details */
+  clusters: Array<GmmCluster>
+  /** BIC score (lower = better model fit vs complexity) */
+  bic: number
+  /** Log-likelihood of the fitted model */
+  logLikelihood: number
+  /** Number of EM iterations performed */
+  iterations: number
+}
+/**
+ * Gaussian Mixture Model (GMM) via Expectation-Maximization
+ *
+ * Clusters multi-dimensional data into n_components Gaussian distributions.
+ * Useful for market regime detection (e.g., calm/volatile/transition states).
+ *
+ * Input: a flat array of features, row-major, with `n_features` per row.
+ * Example: for returns + volume_change with 100 bars:
+ *   data = [ret_0, vol_0, ret_1, vol_1, ...] with n_features = 2
+ *
+ * Parameters:
+ * - data: flat array of feature values (row-major)
+ * - n_features: number of features per observation
+ * - n_components: number of Gaussian clusters (default: 3)
+ * - max_iterations: max EM iterations (default: 100)
+ * - tolerance: convergence threshold on log-likelihood change (default: 1e-6)
+ * - normalize: if true, z-score normalize each feature before fitting (default: true)
+ * - seed: optional random seed for reproducibility
+ */
+export declare function gaussianMixture(data: Array<number>, nFeatures: number, nComponents?: number | undefined | null, maxIterations?: number | undefined | null, tolerance?: number | undefined | null, normalize?: boolean | undefined | null, seed?: number | undefined | null): GmmResult
+export interface HarResult {
+  /** Predicted volatility at each bar (annualized) */
+  predictedVol: Array<number>
+  /** Daily volatility component (Yang-Zhang, 1-day) */
+  volDaily: Array<number>
+  /** Weekly volatility component (5-day average of daily vol) */
+  volWeekly: Array<number>
+  /** Monthly volatility component (22-day average of daily vol) */
+  volMonthly: Array<number>
+  /** Volatility regime: 0=low, 1=medium, 2=high, -1=warmup */
+  regime: Array<number>
+  /** Suggested exposure: 2.0 (low vol), 1.0 (medium), 0.0 (high) */
+  exposure: Array<number>
+}
+/**
+ * HAR-X Volatility Model (Heterogeneous Autoregressive with eXogenous variables)
+ *
+ * Combines volatility from multiple timeframes:
+ * - Daily (1-day Yang-Zhang volatility)
+ * - Weekly (5-day average)
+ * - Monthly (22-day average)
+ *
+ * Predicts future volatility using: vol_pred = a + b1*vol_d + b2*vol_w + b3*vol_m + b4*vix
+ * Coefficients estimated via rolling OLS regression.
+ *
+ * Regime classification based on rolling percentiles:
+ * - Low vol (< percentile_low): exposure = 2.0 (leveraged)
+ * - Medium vol: exposure = 1.0 (normal)
+ * - High vol (> percentile_high): exposure = 0.0 (cash)
+ *
+ * Parameters:
+ * - data: OHLCV market data
+ * - yz_window: Yang-Zhang window (default: 10)
+ * - har_lookback: OLS regression lookback (default: 252)
+ * - percentile_low: low vol threshold (default: 25)
+ * - percentile_high: high vol threshold (default: 75)
+ * - vix_data: optional VIX values (same length as data) for HAR-X extension
+ */
+export declare function harVolatility(data: Array<MarketData>, yzWindow?: number | undefined | null, harLookback?: number | undefined | null, percentileLow?: number | undefined | null, percentileHigh?: number | undefined | null, vixData?: Array<number> | undefined | null): HarResult
 export interface IchimokuData {
   tenkanSen: number
   kijunSen: number
@@ -70,11 +482,453 @@ export interface IchimokuData {
   chikouSpan: number
 }
 export declare function ichimoku(data: Array<MarketData>, tenkanPeriod?: number, kijunPeriod?: number, senkouBPeriod?: number, chikouShift?: number): Array<IchimokuData>
+export interface KReversalResult {
+  kValues: Array<number>
+  buySignals: Array<KReversalSignal>
+  sellSignals: Array<KReversalSignal>
+}
+export interface KReversalSignal {
+  index: number
+  price: number
+  kValue: number
+}
+/**
+ * K-Reversal Indicator
+ *
+ * K = 100 * (Close - Low_N) / (High_N - Low_N)
+ *
+ * K < buy_threshold (default 20) suggests potential uptrend (oversold)
+ * K > sell_threshold (default 80) suggests potential downtrend (overbought)
+ */
+export declare function kReversal(data: Array<MarketData>, period?: number | undefined | null, buyThreshold?: number | undefined | null, sellThreshold?: number | undefined | null): KReversalResult
+export interface OptionContract {
+  /** Strike price */
+  strike: number
+  /** Open interest */
+  openInterest: number
+  /** Daily volume */
+  volume: number
+  /** Days to expiry */
+  dte: number
+  /** "call" or "put" */
+  side: string
+  /** Implied volatility (optional, 0 if unknown) */
+  impliedVolatility: number
+}
+export interface ScoredOption {
+  /** Original contract index */
+  index: number
+  strike: number
+  openInterest: number
+  volume: number
+  dte: number
+  side: string
+  impliedVolatility: number
+  /** OI/Volume ratio (capped) */
+  oiVolumeRatio: number
+  /** Z-score of open interest within its expiry group */
+  oiZScore: number
+  /** Z-score of OI/Volume ratio within its expiry group */
+  ovZScore: number
+  /** Percentile rank of OI z-score (0-1) */
+  oiPercentile: number
+  /** Percentile rank of OV z-score (0-1) */
+  ovPercentile: number
+  /** OTM distance factor */
+  otmFactor: number
+  /** DTE decay factor */
+  dteFactor: number
+  /** Final composite score (higher = more institutional interest) */
+  score: number
+}
+/**
+ * Big Money Options Flow Scoring
+ *
+ * Ranks option contracts by institutional interest using a composite score:
+ * Score = w_oi * OI_percentile * dte_factor + w_ov * OV_percentile * dte_factor + w_otm * otm_factor
+ *
+ * Parameters:
+ * - contracts: array of option contracts with strike, OI, volume, DTE, side
+ * - spot_price: current underlying price
+ * - top_n: number of top contracts to return (default: 50)
+ * - k_otm: OTM scaling factor (default: 2.0, higher = more penalty for far strikes)
+ * - min_volume: minimum volume filter (default: 10)
+ * - min_oi: minimum open interest filter (default: 100)
+ * - cap_oi_vol: cap for OI/Volume ratio (default: 100)
+ * - w_oi: weight on OI z-score percentile (default: 0.4)
+ * - w_ov: weight on OI/Volume z-score percentile (default: 0.4)
+ * - w_otm: weight on OTM distance (default: 0.2)
+ */
+export declare function optionsFlowScore(contracts: Array<OptionContract>, spotPrice: number, topN?: number | undefined | null, kOtm?: number | undefined | null, minVolume?: number | undefined | null, minOi?: number | undefined | null, capOiVol?: number | undefined | null, wOi?: number | undefined | null, wOv?: number | undefined | null, wOtm?: number | undefined | null): Array<ScoredOption>
 export declare function parabolicSar(data: Array<MarketData>, start?: number | undefined | null, increment?: number | undefined | null, maxValue?: number | undefined | null): Array<number>
+export interface PatternMemoryResult {
+  /**
+   * Directional signal at each bar: sum of labels from k-nearest neighbors.
+   * Positive = historically bullish, negative = historically bearish.
+   */
+  signal: Array<number>
+  /** Normalized signal: signal / k (range -1 to +1) */
+  normalizedSignal: Array<number>
+  /** Number of bullish neighbors at each bar */
+  bullishCount: Array<number>
+  /** Number of bearish neighbors at each bar */
+  bearishCount: Array<number>
+  /** Average Lorentzian distance to the k-nearest neighbors */
+  avgDistance: Array<number>
+}
+/**
+ * Pattern Memory (Lorentzian Classification)
+ *
+ * Non-parametric, memory-based directional signal. For each bar:
+ * 1. Encode market state as a feature vector (5 indicators x window bars)
+ * 2. Compare to all past states within a lookback using Lorentzian distance
+ * 3. Find k-nearest neighbors and check what followed (+1 up, -1 down)
+ * 4. Sum the labels as a directional signal
+ *
+ * Features computed internally:
+ * - RSI(14), WaveTrend(10,11), CCI(20), ADX(14), RSI(9)
+ *
+ * Parameters:
+ * - data: OHLCV market data
+ * - k_neighbors: number of nearest neighbors (default: 100)
+ * - lookback: how many past bars to search (default: 200)
+ * - window: number of consecutive bars per feature vector (default: 5)
+ * - forward_bars: bars ahead to determine label (default: 4)
+ */
+export declare function patternMemory(data: Array<MarketData>, kNeighbors?: number | undefined | null, lookback?: number | undefined | null, window?: number | undefined | null, forwardBars?: number | undefined | null): PatternMemoryResult
+export interface PerformanceMetrics {
+  /** Annualized Sharpe Ratio: (mean_return - risk_free) / std * sqrt(252) */
+  sharpeRatio: number
+  /** Annualized Sortino Ratio: (mean_return - risk_free) / downside_std * sqrt(252) */
+  sortinoRatio: number
+  /** Calmar Ratio: annualized_return / max_drawdown */
+  calmarRatio: number
+  /** Maximum Drawdown (as positive fraction, e.g. 0.25 = 25%) */
+  maxDrawdown: number
+  /** Maximum Drawdown duration in bars */
+  maxDrawdownDuration: number
+  /** Total cumulative return (e.g. 0.50 = 50%) */
+  totalReturn: number
+  /** Annualized return */
+  annualizedReturn: number
+  /** Annualized volatility (std of returns * sqrt(252)) */
+  annualizedVolatility: number
+  /** Win rate: fraction of positive returns */
+  winRate: number
+  /** Profit factor: sum of gains / sum of losses */
+  profitFactor: number
+  /** Average win / average loss ratio */
+  payoffRatio: number
+  /** Number of trading periods */
+  numPeriods: number
+  /** Skewness of returns */
+  skewness: number
+  /** Excess kurtosis of returns */
+  kurtosis: number
+  /** Value at Risk (5th percentile of returns) */
+  var95: number
+  /** Conditional VaR / Expected Shortfall (mean of returns below VaR) */
+  cvar95: number
+}
+/**
+ * Compute comprehensive performance metrics from a returns series.
+ *
+ * Input: array of period returns (e.g. daily returns as decimals: 0.01 = 1%)
+ *
+ * Parameters:
+ * - returns: array of period returns
+ * - risk_free_rate: annualized risk-free rate (default: 0.02 = 2%)
+ * - periods_per_year: trading periods per year (default: 252 for daily)
+ */
+export declare function performanceMetrics(returns: Array<number>, riskFreeRate?: number | undefined | null, periodsPerYear?: number | undefined | null): PerformanceMetrics
+/** Quick Sharpe Ratio calculation from returns. */
+export declare function sharpeRatio(returns: Array<number>, riskFreeRate?: number | undefined | null, periodsPerYear?: number | undefined | null): number
+/** Quick Sortino Ratio calculation from returns. */
+export declare function sortinoRatio(returns: Array<number>, riskFreeRate?: number | undefined | null, periodsPerYear?: number | undefined | null): number
+/** Quick Max Drawdown calculation from returns. */
+export declare function maxDrawdown(returns: Array<number>): number
+export interface PortfolioStats {
+  /** Expected daily return of the portfolio */
+  expectedReturnDaily: number
+  /** Expected annualized return */
+  expectedReturnAnnual: number
+  /** Daily portfolio volatility (std dev) */
+  volatilityDaily: number
+  /** Annualized portfolio volatility */
+  volatilityAnnual: number
+  /** Daily portfolio variance */
+  varianceDaily: number
+  /** Sharpe ratio (annualized) */
+  sharpeRatio: number
+}
+export interface CovarianceResult {
+  /** Covariance matrix (flat, row-major, n_assets x n_assets) */
+  covariance: Array<number>
+  /** Correlation matrix (flat, row-major, n_assets x n_assets) */
+  correlation: Array<number>
+  /** Mean daily return per asset */
+  meanReturns: Array<number>
+  /** Annualized volatility per asset */
+  volatilities: Array<number>
+  /** Number of assets */
+  nAssets: number
+}
+export interface EfficientFrontierPoint {
+  /** Target return (annualized) */
+  targetReturn: number
+  /** Portfolio volatility at this point (annualized) */
+  volatility: number
+  /** Optimal weights for this point */
+  weights: Array<number>
+  /** Sharpe ratio at this point */
+  sharpeRatio: number
+}
+export interface EfficientFrontierResult {
+  /** Points along the efficient frontier */
+  frontier: Array<EfficientFrontierPoint>
+  /** Global Minimum Variance Portfolio */
+  gmvp: EfficientFrontierPoint
+  /** Maximum Sharpe Ratio (tangency) portfolio */
+  maxSharpe: EfficientFrontierPoint
+}
+/**
+ * Compute covariance matrix, correlation matrix, and per-asset stats
+ * from multiple return series.
+ *
+ * Input: flat array of returns, row-major, with n_assets per row.
+ * Each row = one time period, columns = assets.
+ * Example: [ret_a_0, ret_b_0, ret_c_0, ret_a_1, ret_b_1, ret_c_1, ...]
+ */
+export declare function covarianceMatrix(returnsFlat: Array<number>, nAssets: number): CovarianceResult
+/**
+ * Compute portfolio return and risk for given weights.
+ *
+ * - returns_flat: flat return series (row-major, n_assets per row)
+ * - n_assets: number of assets
+ * - weights: portfolio weights (must sum to ~1)
+ * - risk_free_rate: annualized (default: 0.02)
+ */
+export declare function portfolioStats(returnsFlat: Array<number>, nAssets: number, weights: Array<number>, riskFreeRate?: number | undefined | null): PortfolioStats
+/**
+ * Compute the efficient frontier using the analytical Markowitz solution.
+ *
+ * - returns_flat: flat return series (row-major, n_assets per row)
+ * - n_assets: number of assets
+ * - n_points: number of points on the frontier (default: 50)
+ * - risk_free_rate: annualized (default: 0.02)
+ */
+export declare function efficientFrontier(returnsFlat: Array<number>, nAssets: number, nPoints?: number | undefined | null, riskFreeRate?: number | undefined | null): EfficientFrontierResult
 export declare function pivotPoints(data: Array<MarketData>): Array<number>
+export interface RegimeLeverageResult {
+  /** Hybrid oscillator values (smoothed) */
+  oscillator: Array<number>
+  /** Yang-Zhang volatility (annualized) */
+  yzVolatility: Array<number>
+  /** Volatility percentile (0-1, rolling 252-bar) */
+  volPercentile: Array<number>
+  /** Regime label: 0=Defensive, 1=Moderate, 2=Bullish, 3=Aggressive */
+  regime: Array<number>
+  /** Leverage factor: 0.0, 1.0, 2.0, or 3.0 */
+  leverage: Array<number>
+  /** VIX ratio (vix/vix3m) if VIX data provided, else NaN */
+  vixRatio: Array<number>
+}
+/**
+ * Market Regime Adaptive Leverage System (MRALS)
+ *
+ * Classifies market into 4 regimes and assigns leverage:
+ * - Aggressive (3x): low vol + bullish trend + normal VIX structure
+ * - Bullish (2x): positive trend, moderate volatility
+ * - Moderate (1x): neutral conditions
+ * - Defensive (0x): high volatility or bearish signals
+ *
+ * Uses a hybrid oscillator combining:
+ * - Price momentum (EMA fast/slow differential)
+ * - Relative strength (21-bar return vs rolling mean, z-scored)
+ * - Volatility component (VIX ratio deviation, z-scored if available)
+ *
+ * Parameters:
+ * - data: OHLCV market data
+ * - vix_values: optional VIX index values (same length)
+ * - vix3m_values: optional VIX3M index values (same length)
+ * - yz_window: Yang-Zhang vol window (default: 21)
+ * - ema_fast: fast EMA for oscillator (default: 8)
+ * - ema_slow: slow EMA for oscillator (default: 21)
+ * - oscillator_smooth: EMA smoothing for oscillator (default: 5)
+ * - vol_lookback: rolling window for vol percentile (default: 252)
+ * - trend_period: SMA period for price trend (default: 50)
+ */
+export declare function regimeLeverage(data: Array<MarketData>, vixValues?: Array<number> | undefined | null, vix3MValues?: Array<number> | undefined | null, yzWindow?: number | undefined | null, emaFast?: number | undefined | null, emaSlow?: number | undefined | null, oscillatorSmooth?: number | undefined | null, volLookback?: number | undefined | null, trendPeriod?: number | undefined | null): RegimeLeverageResult
 export declare function relativeStrengthIndex(prices: Array<number>, period: number): Array<number>
+export interface RviResult {
+  /** RVI line values */
+  rvi: Array<number>
+  /** Signal line (4-period weighted moving average of RVI) */
+  signal: Array<number>
+}
+/**
+ * Relative Vigor Index (RVI)
+ *
+ * Measures the conviction of a price move by comparing the close-open range
+ * to the high-low range. The idea: in uptrends, closes tend to be above opens,
+ * and the opposite in downtrends.
+ *
+ * RVI = SMA(N, numerator) / SMA(N, denominator)
+ * where:
+ *   numerator = (Close - Open) + 2*(Close[-1] - Open[-1]) + 2*(Close[-2] - Open[-2]) + (Close[-3] - Open[-3]) / 6
+ *   denominator = (High - Low) + 2*(High[-1] - Low[-1]) + 2*(High[-2] - Low[-2]) + (High[-3] - Low[-3]) / 6
+ *
+ * Signal = (RVI + 2*RVI[-1] + 2*RVI[-2] + RVI[-3]) / 6
+ *
+ * Parameters:
+ * - data: OHLCV market data
+ * - period: SMA smoothing period (default: 10)
+ */
+export declare function relativeVigorIndex(data: Array<MarketData>, period?: number | undefined | null): RviResult
 export declare function simpleMovingAverage(data: Array<number>, period: number): Array<number>
-export declare function stochasticMomentumIndex(data: Array<MarketData>, periodK?: number | undefined | null, periodD?: number | undefined | null): Array<number>
+export interface SpreadEstimatorResult {
+  /** Rolling bid-ask spread estimates (0.01 = 1% spread) */
+  spreads: Array<number>
+  /** Rolling bid-ask spread with sign preserved */
+  signedSpreads: Array<number>
+}
+/**
+ * Rolling Bid-Ask Spread Estimator (Ardia, Guidotti & Kroencke, 2024)
+ *
+ * Estimates bid-ask spread from OHLC prices using moment conditions
+ * and a rolling window. More accurate than Roll (1984), Corwin-Schultz (2012),
+ * and Abdi-Ranaldo (2017) estimators, especially in low-liquidity markets.
+ *
+ * A returned value of 0.01 means a 1% spread.
+ */
+export declare function spreadEstimator(data: Array<MarketData>, window: number): SpreadEstimatorResult
+/**
+ * Classic Roll (1984) spread estimator for comparison.
+ * spread = 2 * sqrt(-Cov(ΔP_t, ΔP_{t-1})) if covariance is negative, else 0.
+ */
+export declare function rollSpreadEstimator(prices: Array<number>, window: number): Array<number>
+/**
+ * Corwin-Schultz (2012) High-Low spread estimator.
+ * Uses high and low prices over two consecutive periods.
+ */
+export declare function corwinSchultzSpreadEstimator(data: Array<MarketData>, window: number): Array<number>
+export declare function stochasticMomentumIndex(data: Array<MarketData>, lookbackPeriod?: number | undefined | null, firstSmoothing?: number | undefined | null, secondSmoothing?: number | undefined | null): Array<number>
 export declare function stochasticOscillator(data: Array<MarketData>, period: number): Array<number>
+export interface ThreeWayResult {
+  /** Combined score at each bar (-3 to +3) */
+  score: Array<number>
+  /** Trend component: +1 (SMA fast > slow), -1 (opposite), 0 (warmup) */
+  trend: Array<number>
+  /** Momentum component: +1 (RSI > 50), -1 (RSI < 50), 0 (neutral/warmup) */
+  momentum: Array<number>
+  /** Volatility component: +1 (expanding, ATR rising), -1 (contracting), 0 (warmup) */
+  volatility: Array<number>
+  /** Signal: 1 = strong buy (score >= 2), -1 = strong sell (score <= -2), 0 = neutral */
+  signals: Array<number>
+}
+/**
+ * Three Way Indicator
+ *
+ * Combines three independent market dimensions into a single composite score:
+ * 1. Trend: SMA crossover (fast vs slow)
+ * 2. Momentum: RSI position relative to 50
+ * 3. Volatility: ATR direction (expanding or contracting)
+ *
+ * Score ranges from -3 (all bearish) to +3 (all bullish).
+ * Signals fire when score >= buy_threshold or <= -sell_threshold.
+ *
+ * Parameters:
+ * - data: OHLCV market data
+ * - fast_sma: fast SMA period (default: 10)
+ * - slow_sma: slow SMA period (default: 30)
+ * - rsi_period: RSI period (default: 14)
+ * - atr_period: ATR period (default: 14)
+ * - atr_lookback: bars to compare ATR direction (default: 5)
+ * - signal_threshold: absolute score threshold for signals (default: 2)
+ */
+export declare function threeWayIndicator(data: Array<MarketData>, fastSma?: number | undefined | null, slowSma?: number | undefined | null, rsiPeriod?: number | undefined | null, atrPeriod?: number | undefined | null, atrLookback?: number | undefined | null, signalThreshold?: number | undefined | null): ThreeWayResult
 export declare function trendsMeter(data: Array<MarketData>, period?: number | undefined | null): Array<number>
+export interface VolatilityBucket {
+  /** "low", "medium", or "high" */
+  regime: string
+  /** ATR multiplier for this regime */
+  atrMultiplier: number
+  /** Current ATR value */
+  atr: number
+  /** Current volatility (rolling std of returns) */
+  volatility: number
+  /** Stop-loss distance = ATR * multiplier */
+  stopDistance: number
+  /** Low volatility threshold (percentile) */
+  lowThreshold: number
+  /** High volatility threshold (percentile) */
+  highThreshold: number
+}
+export interface VolatilityEngineResult {
+  /** ATR values (full length, NaN for warmup) */
+  atr: Array<number>
+  /** Rolling volatility (std dev of returns, full length, NaN for warmup) */
+  volatility: Array<number>
+  /** Volatility regime at each bar: 0=low, 1=medium, 2=high, -1=warmup */
+  regimes: Array<number>
+  /** ATR multiplier selected at each bar */
+  atrMultipliers: Array<number>
+  /** Stop-loss distance at each bar (ATR * multiplier) */
+  stopDistances: Array<number>
+  /** Percentile-based low threshold at each bar */
+  lowThresholds: Array<number>
+  /** Percentile-based high threshold at each bar */
+  highThresholds: Array<number>
+}
+/**
+ * Volatility-Adaptive Engine
+ *
+ * Computes ATR + rolling volatility (std dev of returns), then classifies
+ * each bar into a volatility regime (low/medium/high) using rolling percentiles.
+ * Each regime maps to a different ATR multiplier for dynamic stop-loss sizing.
+ *
+ * Parameters:
+ * - data: OHLCV market data
+ * - atr_period: ATR lookback (default: 14)
+ * - vol_period: rolling std dev period for returns (default: 20)
+ * - vol_history_len: number of bars for percentile calculation (default: 200)
+ * - vol_warmup: minimum history before assigning regimes (default: 50)
+ * - percentile_low: low vol threshold percentile (default: 20)
+ * - percentile_high: high vol threshold percentile (default: 80)
+ * - low_vol_mult: ATR multiplier for low volatility (default: 1.5)
+ * - med_vol_mult: ATR multiplier for medium volatility (default: 2.5)
+ * - high_vol_mult: ATR multiplier for high volatility (default: 4.0)
+ */
+export declare function volatilityEngine(data: Array<MarketData>, atrPeriod?: number | undefined | null, volPeriod?: number | undefined | null, volHistoryLen?: number | undefined | null, volWarmup?: number | undefined | null, percentileLow?: number | undefined | null, percentileHigh?: number | undefined | null, lowVolMult?: number | undefined | null, medVolMult?: number | undefined | null, highVolMult?: number | undefined | null): VolatilityEngineResult
+/** Get a single volatility bucket classification for the current bar */
+export declare function volatilityBucket(currentAtr: number, currentVolatility: number, volatilityHistory: Array<number>, percentileLow?: number | undefined | null, percentileHigh?: number | undefined | null, lowVolMult?: number | undefined | null, medVolMult?: number | undefined | null, highVolMult?: number | undefined | null): VolatilityBucket
+export interface YangZhangResult {
+  /** Yang-Zhang volatility (annualized) */
+  volatility: Array<number>
+  /** Overnight component (close-to-open) */
+  overnightVol: Array<number>
+  /** Intraday component (open-to-close) */
+  intradayVol: Array<number>
+  /** Rogers-Satchell component */
+  rogersSatchell: Array<number>
+}
+/**
+ * Yang-Zhang Volatility Estimator
+ *
+ * Combines three volatility components for more accurate estimation than
+ * simple standard deviation:
+ * - Overnight volatility: log(Open / prev_Close)²
+ * - Intraday volatility: log(Close / Open)²
+ * - Rogers-Satchell: log(H/O)*log(H/C) + log(L/O)*log(L/C)
+ *
+ * YZ = sqrt(overnight + k * intraday + (1-k) * RS)
+ * where k = 0.34 / (1.34 + (n+1)/(n-1))
+ *
+ * Output is annualized (multiplied by sqrt(252)).
+ *
+ * Parameters:
+ * - data: OHLCV market data
+ * - window: rolling window (default: 10)
+ */
+export declare function yangZhangVolatility(data: Array<MarketData>, window?: number | undefined | null): YangZhangResult
 export declare function sum(a: number, b: number): number

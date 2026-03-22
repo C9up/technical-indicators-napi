@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { relativeVigorIndex } from '../../index.js'
+import pkg from '../../index.js'
+const { relativeVigorIndex } = pkg
 import { generateTestData } from './lib.mjs'
 
 test.group('RelativeVigorIndex', (group) => {

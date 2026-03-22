@@ -68,7 +68,7 @@ pub fn covariance_matrix(
     if k < 2 {
         return Err(Error::from_reason("Need at least 2 assets"));
     }
-    if !returns_flat.len().is_multiple_of(k) {
+    if returns_flat.len() % k != 0 {
         return Err(Error::from_reason("returns length must be divisible by n_assets"));
     }
 

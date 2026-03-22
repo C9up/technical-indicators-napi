@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { optionsFlowScore } from '../../index.js'
+import pkg from '../../index.js'
+const { optionsFlowScore } = pkg
 
 /**
  * Build a minimal set of synthetic option contracts around a given spot price.

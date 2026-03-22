@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { stochasticMomentumIndex } from '../../index.js'
+import pkg from '../../index.js'
+const { stochasticMomentumIndex } = pkg
 import { generateTestData } from './lib.mjs'
 
 test.group('StochasticMomentumIndex', async (group) => {

@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { patternMemory } from '../../index.js'
+import pkg from '../../index.js'
+const { patternMemory } = pkg
 import { generateTestData } from './lib.mjs'
 
 test.group('PatternMemory', (group) => {

@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { extractImportantLevels } from '../../index.js'
+import pkg from '../../index.js'
+const { extractImportantLevels } = pkg
 
 /**
  * extractImportantLevels(data: number[]): ImportantLevels

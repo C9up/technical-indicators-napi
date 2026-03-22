@@ -1,6 +1,6 @@
 # @c9up/technical-indicators-napi
 
-High-performance technical analysis library written in Rust, compiled to native Node.js addon via [NAPI-RS](https://napi.rs). Provides 15 indicators and 2 chart types with zero JavaScript overhead.
+High-performance technical analysis and quantitative finance library written in Rust, compiled to native Node.js addon via [NAPI-RS](https://napi.rs). 35+ indicators, copulas, portfolio analytics, ML features, and chart types with zero JavaScript overhead.
 
 [![npm version][npm-image]][npm-url]
 
@@ -62,7 +62,7 @@ interface MarketData {
 }
 ```
 
-Used by: `directionalMovementIndex`, `parabolicSar`, `stochasticOscillator`, `stochasticMomentumIndex`, `ichimoku`, `trendsMeter`, `pivotPoints`, `entryExitSignals`, `kReversal`
+Used by: `directionalMovementIndex`, `parabolicSar`, `stochasticOscillator`, `stochasticMomentumIndex`, `ichimoku`, `trendsMeter`, `pivotPoints`, `entryExitSignals`, `kReversal`, `awesomeOscillator`, `relativeVigorIndex`, `threeWayIndicator`, `choppinessIndex`, `candlestickPatterns`, `spreadEstimator`, `volatilityEngine`, `yangZhangVolatility`, `harVolatility`, `regimeLeverage`, `featureEngine`, `frama`, `patternMemory`
 
 ---
 
@@ -397,6 +397,300 @@ const levels = extractImportantLevels(closePrices)
 
 ---
 
+### Choppiness Index
+
+```typescript
+choppinessIndex(data: Array<MarketData>, period?: number, lowThreshold?: number, highThreshold?: number): ChoppinessResult
+
+interface ChoppinessResult {
+  chop: Array<number>     // CI values (0-100)
+  signals: Array<number>  // 1=trending crossover, -1=choppy crossover, 0=neutral
+}
+```
+
+`CI = 100 * log10(Sum(TR, N) / (HH - LL)) / log10(N)`. Low values (< 38.2) = trending, high values (> 61.8) = choppy/sideways.
+
+---
+
+### Disparity Index
+
+```typescript
+disparityIndex(prices: Array<number>, period?: number): Array<number>
+```
+
+`DI = 100 * (Close - SMA) / SMA`. Measures % distance from price to its moving average. Positive = above MA, negative = below.
+
+---
+
+### Awesome Oscillator (Bill Williams)
+
+```typescript
+awesomeOscillator(data: Array<MarketData>, fastPeriod?: number, slowPeriod?: number): AwesomeOscillatorResult
+
+interface AwesomeOscillatorResult {
+  ao: Array<number>        // SMA(fast, midpoints) - SMA(slow, midpoints)
+  histogram: Array<number> // +1 rising, -1 falling, 0 neutral
+}
+```
+
+---
+
+### Relative Vigor Index (RVI)
+
+```typescript
+relativeVigorIndex(data: Array<MarketData>, period?: number): RviResult
+
+interface RviResult {
+  rvi: Array<number>    // RVI line (close-open vs high-low ratio, smoothed)
+  signal: Array<number> // Signal line (4-bar symmetric weighted MA)
+}
+```
+
+---
+
+### Three Way Indicator
+
+```typescript
+threeWayIndicator(data: Array<MarketData>, fastSma?, slowSma?, rsiPeriod?, atrPeriod?, atrLookback?, signalThreshold?): ThreeWayResult
+
+interface ThreeWayResult {
+  score: Array<number>      // -3 to +3 composite
+  trend: Array<number>      // SMA crossover: +1/-1
+  momentum: Array<number>   // RSI vs 50: +1/-1
+  volatility: Array<number> // ATR direction: +1/-1
+  signals: Array<number>    // 1=strong buy, -1=strong sell
+}
+```
+
+---
+
+### Candlestick Patterns (13 patterns)
+
+```typescript
+candlestickPatterns(data: Array<MarketData>, bodyThreshold?: number): CandlestickPatterns
+
+interface CandlestickPatterns {
+  doji, engulfing, hammer, hangingMan, harami, morningStar, eveningStar,
+  threeWhiteSoldiers, threeBlackCrows, shootingStar, invertedHammer,
+  spinningTop, marubozu: Array<number>  // +1 bullish, -1 bearish, 0 none
+  composite: Array<number>               // sum of all signals
+}
+```
+
+Native Rust alternative to TA-Lib. Single-bar, two-bar, and three-bar patterns detected in one pass.
+
+---
+
+### FRAMA (Fractal Adaptive Moving Average)
+
+```typescript
+frama(data: Array<MarketData>, period?: number, fastPeriod?: number, slowPeriod?: number): FramaResult
+
+interface FramaResult {
+  frama: Array<number>            // Adaptive moving average
+  fractalDimension: Array<number> // 1.0=trending, 2.0=choppy
+  alpha: Array<number>            // Smoothing factor used
+  slope: Array<number>            // Bar-to-bar FRAMA change
+}
+```
+
+John Ehlers' FRAMA: EMA whose smoothing adapts via the fractal dimension of price data.
+
+---
+
+### Anchored Regression (Trend Detection)
+
+```typescript
+anchoredRegressionStatic(prices: Array<number>, anchorPeriod: number, bandMult?: number): AnchoredRegressionResult
+anchoredRegressionRolling(prices: Array<number>, anchorPeriod: number, bandMult?: number): AnchoredRegressionResult
+
+interface RegressionSegment { startIndex, endIndex, slope, intercept, stdDev, fitted, upperBand, lowerBand }
+interface AnchoredRegressionResult {
+  segments: Array<RegressionSegment>
+  fitted, upperBand, lowerBand, slopes: Array<number>
+}
+```
+
+Static: independent regression per fixed window. Rolling: regression updates bar-by-bar from each anchor reset.
+
+---
+
+## Volatility
+
+### Yang-Zhang Volatility
+
+```typescript
+yangZhangVolatility(data: Array<MarketData>, window?: number): YangZhangResult
+
+interface YangZhangResult {
+  volatility: Array<number>    // Annualized YZ vol
+  overnightVol, intradayVol, rogersSatchell: Array<number>
+}
+```
+
+Combines overnight (close-to-open), intraday (open-to-close), and Rogers-Satchell components.
+
+---
+
+### Volatility Engine (Adaptive Stop-Loss)
+
+```typescript
+volatilityEngine(data: Array<MarketData>, atrPeriod?, volPeriod?, volHistoryLen?, volWarmup?,
+  percentileLow?, percentileHigh?, lowVolMult?, medVolMult?, highVolMult?): VolatilityEngineResult
+
+interface VolatilityEngineResult {
+  atr, volatility, atrMultipliers, stopDistances, lowThresholds, highThresholds: Array<number>
+  regimes: Array<number>  // 0=low, 1=medium, 2=high
+}
+```
+
+ATR + rolling std dev of returns, classified into 3 regimes via percentiles. Each regime has a different ATR multiplier for dynamic stop-loss sizing.
+
+---
+
+### HAR-X Volatility Model
+
+```typescript
+harVolatility(data: Array<MarketData>, yzWindow?, harLookback?, percentileLow?, percentileHigh?, vixData?): HarResult
+
+interface HarResult {
+  predictedVol, volDaily, volWeekly, volMonthly: Array<number>
+  regime: Array<number>   // 0=low, 1=medium, 2=high
+  exposure: Array<number> // 2.0 (low vol), 1.0 (medium), 0.0 (high)
+}
+```
+
+Heterogeneous Autoregressive model combining daily/weekly/monthly Yang-Zhang volatility via rolling OLS. Optional VIX integration.
+
+---
+
+### Regime Leverage (MRALS)
+
+```typescript
+regimeLeverage(data: Array<MarketData>, vixValues?, vix3mValues?, yzWindow?, emaFast?, emaSlow?,
+  oscillatorSmooth?, volLookback?, trendPeriod?): RegimeLeverageResult
+
+interface RegimeLeverageResult {
+  oscillator, yzVolatility, volPercentile, vixRatio: Array<number>
+  regime: Array<number>   // 0=Defensive, 1=Moderate, 2=Bullish, 3=Aggressive
+  leverage: Array<number> // 0.0, 1.0, 2.0, or 3.0
+}
+```
+
+4-regime classification with hybrid oscillator (momentum + relative strength + VIX). Optional VIX/VIX3M integration.
+
+---
+
+## Probability & Statistics
+
+### Conditional Probability
+
+```typescript
+conditionalProbability(prices, firstMoveDays, secondMoveDays, firstThreshold, secondThreshold): ConditionalProbabilityResult
+conditionalProbabilityMatrix(prices, firstMoveDays, secondMoveDays, firstThresholds[], secondThresholds[]): ConditionalMatrixEntry[]
+```
+
+P(second move >= Y% in M days | first move >= X% in N days). Matrix version for heatmaps.
+
+---
+
+### Spread Estimators
+
+```typescript
+spreadEstimator(data: Array<MarketData>, window: number): { spreads, signedSpreads: Array<number> }
+rollSpreadEstimator(prices: Array<number>, window: number): Array<number>
+corwinSchultzSpreadEstimator(data: Array<MarketData>, window: number): Array<number>
+```
+
+Three bid-ask spread estimation methods: Ardia et al. (2024) OHLC GMM, Roll (1984), Corwin-Schultz (2012).
+
+---
+
+### Pattern Memory (Lorentzian k-NN)
+
+```typescript
+patternMemory(data: Array<MarketData>, kNeighbors?, lookback?, window?, forwardBars?): PatternMemoryResult
+
+interface PatternMemoryResult {
+  signal, normalizedSignal, avgDistance: Array<number>
+  bullishCount, bearishCount: Array<number>
+}
+```
+
+Non-parametric directional signal. Encodes market state as 5-indicator feature vector, finds k-nearest past patterns via Lorentzian distance, sums their forward labels.
+
+---
+
+### Gaussian Mixture Model
+
+```typescript
+gaussianMixture(data: Array<number>, nFeatures: number, nComponents?, maxIterations?, tolerance?, normalize?, seed?): GmmResult
+
+interface GmmResult {
+  labels: Array<number>
+  probabilities: Array<number>  // flat, nPoints * nComponents
+  clusters: Array<{ id, mean, variance, weight, count }>
+  bic: number
+  logLikelihood: number
+}
+```
+
+EM-based clustering for market regime detection. K-means++ initialization, BIC for model selection.
+
+---
+
+### Options Flow Scoring
+
+```typescript
+optionsFlowScore(contracts: Array<OptionContract>, spotPrice: number, topN?, kOtm?, minVolume?, minOi?,
+  capOiVol?, wOi?, wOv?, wOtm?): Array<ScoredOption>
+```
+
+Composite scoring for institutional activity detection. Ranks contracts by OI z-score, OI/Volume stickiness, and OTM distance.
+
+---
+
+## Portfolio Analytics
+
+### Performance Metrics
+
+```typescript
+performanceMetrics(returns: Array<number>, riskFreeRate?, periodsPerYear?): PerformanceMetrics
+sharpeRatio(returns, riskFreeRate?, periodsPerYear?): number
+sortinoRatio(returns, riskFreeRate?, periodsPerYear?): number
+maxDrawdown(returns): number
+
+interface PerformanceMetrics {
+  sharpeRatio, sortinoRatio, calmarRatio, maxDrawdown, maxDrawdownDuration,
+  totalReturn, annualizedReturn, annualizedVolatility, winRate, profitFactor,
+  payoffRatio, skewness, kurtosis, var95, cvar95: number
+}
+```
+
+---
+
+### Markowitz Portfolio Analysis
+
+```typescript
+covarianceMatrix(returnsFlat: Array<number>, nAssets: number): CovarianceResult
+portfolioStats(returnsFlat, nAssets, weights, riskFreeRate?): PortfolioStats
+efficientFrontier(returnsFlat, nAssets, nPoints?, riskFreeRate?): EfficientFrontierResult
+```
+
+Covariance/correlation matrices, portfolio return/risk for given weights, and the full Markowitz efficient frontier with GMVP and max Sharpe portfolio.
+
+---
+
+### ML Feature Engine
+
+```typescript
+featureEngine(data: Array<MarketData>): Array<FeatureRow>
+```
+
+Generates ~35 features per bar: returns (1/5/10/20), volatility (TR, ATR, std dev), momentum (RSI, ROC), moving averages (SMA, EMA), MACD (line/signal/histogram), Bollinger (%B, bandwidth), price position, volume ratios, candle features, trend signals. Ready for scikit-learn / XGBoost / TensorFlow.
+
+---
+
 ## Charts
 
 ### Renko Chart
@@ -460,6 +754,15 @@ Many indicators produce `NaN` for early values where insufficient data is availa
 | Ichimoku | Varies per component |
 | SMI | `lookback - 1` |
 | K-Reversal | `period - 1` |
+| Choppiness Index | `period` |
+| Disparity Index | `period - 1` |
+| Awesome Oscillator | `slowPeriod - 1` |
+| RVI | `period + 5` |
+| FRAMA | `period` |
+| Yang-Zhang | `window` |
+| HAR Volatility | `yzWindow + 22` |
+| Volatility Engine | `volWarmup + volPeriod` |
+| Feature Engine | 50 (fixed warmup) |
 
 Always filter or check for `NaN` before using indicator values in calculations.
 
@@ -632,6 +935,17 @@ results.forEach(r => {
 | Clayton Copula | Archimedean copula (lower tail dependence) |
 | Gumbel Copula | Archimedean copula (upper tail dependence) |
 | Frank Copula | Archimedean copula (symmetric, no tail dependence) |
+| Choppiness Index | Dreiss (1993) |
+| Awesome Oscillator | Bill Williams |
+| RVI | John Ehlers' Relative Vigor Index |
+| FRAMA | John Ehlers' Fractal Adaptive Moving Average |
+| Yang-Zhang | Yang & Zhang (2000) volatility estimator |
+| HAR | Corsi (2009) Heterogeneous Autoregressive model |
+| Ardia Spread | Ardia, Guidotti & Kroencke (2024) |
+| Roll Spread | Roll (1984) serial covariance |
+| Corwin-Schultz Spread | Corwin & Schultz (2012) high-low |
+| Pattern Memory | Lorentzian k-NN classification |
+| GMM | Expectation-Maximization with diagonal covariance |
 
 ## Development
 
@@ -645,7 +959,7 @@ npm run build
 # Build debug
 npm run build:debug
 
-# Run tests
+# Run tests (290 tests)
 npm test
 ```
 

@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { volatilityEngine, volatilityBucket } from '../../index.js'
+import pkg from '../../index.js'
+const { volatilityEngine, volatilityBucket } = pkg
 import { generateTestData } from './lib.mjs'
 
 /** Valid regime values as defined by the Rust implementation. */

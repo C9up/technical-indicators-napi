@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { harVolatility } from '../../index.js'
+import pkg from '../../index.js'
+const { harVolatility } = pkg
 import { generateTestData } from './lib.mjs'
 
 test.group('HarVolatility', (group) => {

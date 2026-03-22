@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { covarianceMatrix, portfolioStats, efficientFrontier } from '../../index.js'
+import pkg from '../../index.js'
+const { covarianceMatrix, portfolioStats, efficientFrontier } = pkg
 
 /**
  * Build a flat daily returns array for `nAssets` assets over `nDays` days.

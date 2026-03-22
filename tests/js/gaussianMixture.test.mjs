@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { gaussianMixture } from '../../index.js'
+import pkg from '../../index.js'
+const { gaussianMixture } = pkg
 
 test.group('GaussianMixture', (group) => {
 

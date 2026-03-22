@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { directionalMovementIndex } from '../../index.js'
+import pkg from '../../index.js'
+const { directionalMovementIndex } = pkg
 import { generateTestData } from "./lib.mjs";
 
 test.group('Directional movement index', (group) => {

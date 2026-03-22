@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { pivotPoints } from '../../index.js'
+import pkg from '../../index.js'
+const { pivotPoints } = pkg
 import { generateTestData } from './lib.mjs'
 
 /**

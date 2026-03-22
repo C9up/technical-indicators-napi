@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { performanceMetrics, sharpeRatio, sortinoRatio, maxDrawdown } from '../../index.js'
+import pkg from '../../index.js'
+const { performanceMetrics, sharpeRatio, sortinoRatio, maxDrawdown } = pkg
 
 test.group('PerformanceMetrics', (group) => {
 

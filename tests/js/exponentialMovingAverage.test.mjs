@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { exponentialMovingAverage } from '../../index.js'
+import pkg from '../../index.js'
+const { exponentialMovingAverage } = pkg
 
 test.group('ExponentialMovingAverage', () => {
     test('test invalid period zero', ({ assert }) => {

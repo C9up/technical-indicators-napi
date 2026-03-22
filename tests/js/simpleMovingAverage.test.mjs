@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { simpleMovingAverage } from '../../index.js'
+import pkg from '../../index.js'
+const { simpleMovingAverage } = pkg
 
 test.group('SimpleMovingAverage', (group) => {
 

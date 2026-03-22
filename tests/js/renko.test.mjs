@@ -1,6 +1,7 @@
 import { test } from '@japa/runner'
 import { generateTestData } from './lib.mjs'
-import { renkoChart } from '../../index.js'
+import pkg from '../../index.js'
+const { renkoChart } = pkg
 
 test.group('Renko Chart', () => {
 

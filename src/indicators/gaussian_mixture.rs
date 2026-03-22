@@ -71,7 +71,7 @@ pub fn gaussian_mixture(
     if n_feat == 0 {
         return Err(Error::from_reason("n_features must be > 0"));
     }
-    if !data.len().is_multiple_of(n_feat) {
+    if data.len() % n_feat != 0 {
         return Err(Error::from_reason("data length must be divisible by n_features"));
     }
 

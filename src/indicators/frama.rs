@@ -42,7 +42,7 @@ pub fn frama(
     let n = closes.len();
 
     let mut p = period.unwrap_or(20) as usize;
-    if !p.is_multiple_of(2) {
+    if p % 2 != 0 {
         p += 1; // must be even
     }
     let half = p / 2;

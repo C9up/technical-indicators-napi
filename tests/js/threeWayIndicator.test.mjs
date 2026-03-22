@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { threeWayIndicator } from '../../index.js'
+import pkg from '../../index.js'
+const { threeWayIndicator } = pkg
 import { generateTestData } from './lib.mjs'
 
 test.group('ThreeWayIndicator', (group) => {

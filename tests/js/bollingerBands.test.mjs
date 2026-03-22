@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { bollingerBands } from '../../index.js'
+import pkg from '../../index.js'
+const { bollingerBands } = pkg
 
 test.group('BollingerBands', (group) => {
 

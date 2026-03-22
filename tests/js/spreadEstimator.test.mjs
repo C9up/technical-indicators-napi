@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { spreadEstimator, rollSpreadEstimator, corwinSchultzSpreadEstimator } from '../../index.js'
+import pkg from '../../index.js'
+const { spreadEstimator, rollSpreadEstimator, corwinSchultzSpreadEstimator } = pkg
 import { generateTestData } from './lib.mjs'
 
 test.group('Spread Estimator', (group) => {

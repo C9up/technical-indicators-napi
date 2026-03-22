@@ -1,5 +1,6 @@
 import { test } from '@japa/runner'
-import { entryExitSignals } from '../../index.js'
+import pkg from '../../index.js'
+const { entryExitSignals } = pkg
 import { generateTestData } from './lib.mjs'
 
 /**
