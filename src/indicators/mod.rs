@@ -11,6 +11,7 @@ pub mod parabolic_sar;
 pub mod pivot_points;
 pub mod relative_strength_index;
 pub mod simple_moving_average;
+pub mod spread_estimator;
 pub mod stochastic_momentum_index;
 pub mod stochastic_oscillator;
 pub mod trends_meter;
