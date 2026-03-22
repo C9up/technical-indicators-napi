@@ -22,6 +22,7 @@ pub mod pattern_memory;
 pub mod performance_metrics;
 pub mod portfolio_analysis;
 pub mod pivot_points;
+pub mod regime_leverage;
 pub mod relative_strength_index;
 pub mod relative_vigor_index;
 pub mod simple_moving_average;
