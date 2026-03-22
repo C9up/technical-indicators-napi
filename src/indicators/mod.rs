@@ -1,6 +1,7 @@
 pub mod anchored_regression;
 pub mod awesome_oscillator;
 pub mod bollinger_bands;
+pub mod candlestick_patterns;
 pub mod choppiness_index;
 pub mod conditional_probability;
 pub mod copulas;
