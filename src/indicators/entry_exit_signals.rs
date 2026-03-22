@@ -43,21 +43,28 @@ pub fn entry_exit_signals(
         return Vec::new();
     }
 
+    // SMA: returns array of len = closes.len(), first sma_period-1 values are NaN
+    // sma_values[i] corresponds to closes[i]
     let sma_values = match calculate_sma(closes, sma_period) {
         Ok(values) => values,
         Err(_) => return Vec::new(),
     };
 
+    // EMA: returns array of len = closes.len() - ema_period + 1
+    // ema_values[0] corresponds to closes[ema_period - 1]
     let ema_values = match calculate_ema(closes, ema_period) {
         Ok(values) => values,
         Err(_) => return Vec::new(),
     };
 
+    // ATR: returns array of len = closes.len() - atr_period
+    // atr_values[0] corresponds to candle index atr_period
     let atr_values = match calculate_atr(highs, lows, closes, atr_period_usize) {
         Ok(values) => values,
         Err(_) => return Vec::new(),
     };
 
+    // Start where all indicators have valid values
     let start_index = *[
         sma_period_usize - 1,
         ema_period_usize - 1,
@@ -72,22 +79,27 @@ pub fn entry_exit_signals(
 
     #[allow(clippy::needless_range_loop)]
     for i in start_index..closes.len() {
-        let current_sma_index = i - (sma_period_usize - 1);
-        let current_ema_index = i - (ema_period_usize - 1);
-        let current_atr_index = i - atr_period_usize;
-
-        if current_sma_index >= sma_values.len()
-            || current_ema_index >= ema_values.len()
-            || current_atr_index >= atr_values.len()
-        {
+        // SMA is aligned with closes: sma_values[i] = SMA at bar i
+        let current_sma = sma_values[i];
+        if current_sma.is_nan() {
             continue;
         }
 
-        let current_price = closes[i];
-        let current_sma = sma_values[current_sma_index];
-        let current_ema = ema_values[current_ema_index];
-        let current_atr = atr_values[current_atr_index];
+        // EMA starts at index ema_period-1 of closes, so ema_values index = i - (ema_period - 1)
+        let ema_idx = i - (ema_period_usize - 1);
+        if ema_idx >= ema_values.len() {
+            continue;
+        }
+        let current_ema = ema_values[ema_idx];
 
+        // ATR starts at index atr_period of closes, so atr_values index = i - atr_period
+        let atr_idx = i - atr_period_usize;
+        if atr_idx >= atr_values.len() {
+            continue;
+        }
+        let current_atr = atr_values[atr_idx];
+
+        let current_price = closes[i];
         let entry_threshold = current_sma + current_atr * threshold;
         let exit_threshold = current_sma - current_atr * threshold;
 
