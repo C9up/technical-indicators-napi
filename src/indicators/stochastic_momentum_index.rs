@@ -7,22 +7,23 @@ use crate::low_high_open_close_volume_date_to_array_helper::process_market_data;
 #[napi]
 pub fn stochastic_momentum_index(
     data: Vec<crate::MarketData>,
-    period_k: Option<u32>,
-    period_d: Option<u32>
+    lookback_period: Option<u32>,
+    first_smoothing: Option<u32>,
+    second_smoothing: Option<u32>,
 ) -> Result<Vec<f64>> {
 
     let data = process_market_data(data);
 
-    // Validate input data consistency
     let n = data.highs.len();
     if data.lows.len() != n || data.closes.len() != n {
         return Err(napi::Error::from_reason("Highs, lows and closes arrays must have the same length".to_string()));
     }
 
-    let lookback = period_k.unwrap_or(14) as usize;
-    let smoothing = period_d.unwrap_or(3) as usize;
+    // Standard Blau SMI parameters: q=14, r=3, s=3
+    let lookback = lookback_period.unwrap_or(14) as usize;
+    let smooth_r = first_smoothing.unwrap_or(3) as usize;
+    let smooth_s = second_smoothing.unwrap_or(3) as usize;
 
-    // Handle insufficient data case
     if n < lookback {
         return Ok(vec![f64::NAN; n]);
     }
@@ -40,13 +41,13 @@ pub fn stochastic_momentum_index(
         range.push(hh - ll);
     }
 
-    // Double EMA smoothing avec propagation des erreurs
-    let ema_diff1 = calculate_ema(&diff, lookback as i32)?;
-    let ema_diff2 = calculate_ema(&ema_diff1, smoothing as i32)?;
-    let ema_range1 = calculate_ema(&range, lookback as i32)?;
-    let ema_range2 = calculate_ema(&ema_range1, smoothing as i32)?;
+    // Double EMA smoothing per Blau: EMA(r) then EMA(s)
+    let ema_diff1 = calculate_ema(&diff, smooth_r as i32)?;
+    let ema_diff2 = calculate_ema(&ema_diff1, smooth_s as i32)?;
+    let ema_range1 = calculate_ema(&range, smooth_r as i32)?;
+    let ema_range2 = calculate_ema(&ema_range1, smooth_s as i32)?;
 
-    // Build final result with padding and SMI values
+    // SMI = 100 * D_smoothed / (R_smoothed / 2) = 200 * D_smoothed / R_smoothed
     let mut smi = vec![f64::NAN; lookback - 1];
     for i in 0..ema_diff2.len() {
         let value = if ema_range2[i] == 0.0 { 0.0 } else { 200.0 * (ema_diff2[i] / ema_range2[i]) };
