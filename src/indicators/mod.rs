@@ -6,6 +6,7 @@ pub mod directional_movement_index;
 pub mod entry_exit_signals;
 pub mod exponential_moving_average;
 pub mod extract_important_levels;
+pub mod feature_engine;
 pub mod ichimoku;
 pub mod k_reversal;
 pub mod options_flow;
