@@ -1,5 +1,6 @@
 pub mod anchored_regression;
 pub mod bollinger_bands;
+pub mod choppiness_index;
 pub mod conditional_probability;
 pub mod copulas;
 pub mod directional_movement_index;
