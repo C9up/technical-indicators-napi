@@ -53,6 +53,14 @@ test.group('Directional movement index', (group) => {
         assert.lengthOf(result.minusDi, 30)
         assert.lengthOf(result.adx, 30)
 
-        assert.equal(result.adx.slice(0, period * 2 - 1).every(v => v === 0), true)
+        // First `period` values should be NaN for plusDi and minusDi
+        for (let i = 0; i < period; i++) {
+            assert.isTrue(isNaN(result.plusDi[i]), `plusDi[${i}] should be NaN`)
+            assert.isTrue(isNaN(result.minusDi[i]), `minusDi[${i}] should be NaN`)
+        }
+
+        // Values after the initial period should be valid (non-NaN)
+        assert.isFalse(isNaN(result.plusDi[period]), `plusDi[${period}] should be a valid number`)
+        assert.isFalse(isNaN(result.minusDi[period]), `minusDi[${period}] should be a valid number`)
     })
 })

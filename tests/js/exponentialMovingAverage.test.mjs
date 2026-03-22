@@ -30,14 +30,12 @@ test.group('ExponentialMovingAverage', () => {
 
     test('test valid input', ({ assert }) => {
         const data = [1.0, 2.0, 3.0, 4.0, 5.0]
-        // Pour une période de 3, le facteur de lissage est 2/(3+1)=0.5.
-        // Calcul étape par étape :
-        // EMA[0] = 1.0
-        // EMA[1] = 0.5 * 2.0 + 0.5 * 1.0 = 1.5
-        // EMA[2] = 0.5 * 3.0 + 0.5 * 1.5 = 2.25
-        // EMA[3] = 0.5 * 4.0 + 0.5 * 2.25 = 3.125
-        // EMA[4] = 0.5 * 5.0 + 0.5 * 3.125 = 4.0625
-        const expected = [1.0, 1.5, 2.25, 3.125, 4.0625]
+        // EMA now uses SMA seed: seed = (1+2+3)/3 = 2.0, k = 2/(3+1) = 0.5
+        // Output length = data.length - period + 1 = 3
+        // EMA[0] = SMA(1,2,3) = 2.0
+        // EMA[1] = 0.5 * 4.0 + 0.5 * 2.0 = 3.0
+        // EMA[2] = 0.5 * 5.0 + 0.5 * 3.0 = 4.0
+        const expected = [2.0, 3.0, 4.0]
         const result = exponentialMovingAverage(data, 3)
         assert.deepEqual(result, expected)
     })

@@ -42,12 +42,10 @@ test.group('Renko Chart', () => {
     test('should not generate bricks if movement is insufficient', ({ assert }) => {
         const prices = [100, 101, 102, 103, 104, 105]
         const brickSize = 10.0
-        try {
-            renkoChart(prices, brickSize)
-            assert.fail('The function did not throw an error for an invalid brick size')
-        } catch (error) {
-            assert.equal(error.message, 'brick_size must be lower than prices length.')
-        }
+        // When movement is less than brick_size, only the initial brick is returned
+        const result = renkoChart(prices, brickSize)
+        assert.equal(result.length, 1, 'Only the initial brick should be returned when movement is insufficient')
+        assert.approximately(result[0].price, prices[0], 0.001, 'Initial brick price should equal first price')
     })
 
     test('should generate bricks when there are sufficient price movements', ({ assert }) => {
