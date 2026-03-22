@@ -4,6 +4,7 @@ pub mod entry_exit_signals;
 pub mod exponential_moving_average;
 pub mod extract_important_levels;
 pub mod ichimoku;
+pub mod k_reversal;
 pub mod parabolic_sar;
 pub mod pivot_points;
 pub mod relative_strength_index;
