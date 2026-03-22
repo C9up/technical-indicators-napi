@@ -5,6 +5,7 @@ pub mod calculate_atr_helper;
 pub mod calculate_sma_helper;
 pub mod entry_exit_signals_helper;
 pub mod highest_lowest_helper;
+pub mod copula_helpers;
 
 
 #[napi(object)]

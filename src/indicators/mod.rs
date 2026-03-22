@@ -1,4 +1,5 @@
 pub mod bollinger_bands;
+pub mod copulas;
 pub mod directional_movement_index;
 pub mod entry_exit_signals;
 pub mod exponential_moving_average;
