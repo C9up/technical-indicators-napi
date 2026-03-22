@@ -18,6 +18,7 @@ pub mod k_reversal;
 pub mod options_flow;
 pub mod parabolic_sar;
 pub mod pattern_memory;
+pub mod performance_metrics;
 pub mod pivot_points;
 pub mod relative_strength_index;
 pub mod relative_vigor_index;
