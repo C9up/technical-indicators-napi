@@ -17,3 +17,4 @@ pub mod spread_estimator;
 pub mod stochastic_momentum_index;
 pub mod stochastic_oscillator;
 pub mod trends_meter;
+pub mod volatility_engine;
