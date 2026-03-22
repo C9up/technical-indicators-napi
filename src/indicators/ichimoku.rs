@@ -32,13 +32,13 @@ pub fn ichimoku(
     let lows = data.lows;
     let closes = data.closes;
 
-    // Initialisation des tableaux
     let mut tenkan = vec![f64::NAN; n];
     let mut kijun = vec![f64::NAN; n];
     let mut senkou_a = vec![f64::NAN; n];
     let mut senkou_b = vec![f64::NAN; n];
     let mut chikou = vec![f64::NAN; n];
 
+    // Tenkan-sen and Kijun-sen
     for i in 0..n {
         if i >= tenkan_p - 1 {
             let start = i - (tenkan_p - 1);
@@ -53,6 +53,7 @@ pub fn ichimoku(
         }
     }
 
+    // Senkou Span B buffer (computed at current bar, will be shifted forward)
     let mut senkou_b_buffer = vec![f64::NAN; n];
     #[allow(clippy::needless_range_loop)]
     for i in 0..n {
@@ -63,24 +64,27 @@ pub fn ichimoku(
         }
     }
 
+    // Senkou Span A & B: shift forward by kijun_p periods
+    // Values computed at bar i are displayed at bar i + kijun_p
     let senkou_shift = kijun_p;
     for i in 0..n {
-        if i >= senkou_shift {
-            let base_idx = i - senkou_shift;
-
-            if !tenkan[base_idx].is_nan() && !kijun[base_idx].is_nan() {
-                senkou_a[i] = (tenkan[base_idx] + kijun[base_idx]) / 2.0;
+        let target = i + senkou_shift;
+        if target < n {
+            if !tenkan[i].is_nan() && !kijun[i].is_nan() {
+                senkou_a[target] = (tenkan[i] + kijun[i]) / 2.0;
             }
 
-            if !senkou_b_buffer[base_idx].is_nan() {
-                senkou_b[i] = senkou_b_buffer[base_idx];
+            if !senkou_b_buffer[i].is_nan() {
+                senkou_b[target] = senkou_b_buffer[i];
             }
         }
     }
 
+    // Chikou Span: current close plotted chikou_shift bars into the past
+    // chikou[i] = close from chikou_shift bars in the future (i.e. closes[i + chikou_shift])
     for i in 0..n {
-        if i >= chikou_shift {
-            chikou[i] = closes[i - chikou_shift];
+        if i + chikou_shift < n {
+            chikou[i] = closes[i + chikou_shift];
         }
     }
 
