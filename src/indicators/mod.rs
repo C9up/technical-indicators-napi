@@ -1,3 +1,4 @@
+pub mod anchored_regression;
 pub mod bollinger_bands;
 pub mod conditional_probability;
 pub mod copulas;
