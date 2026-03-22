@@ -10,6 +10,7 @@ pub mod entry_exit_signals;
 pub mod exponential_moving_average;
 pub mod extract_important_levels;
 pub mod feature_engine;
+pub mod gaussian_mixture;
 pub mod har_volatility;
 pub mod ichimoku;
 pub mod k_reversal;
